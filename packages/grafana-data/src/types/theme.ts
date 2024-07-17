@@ -3,6 +3,7 @@ import { ThemeVisualizationColors } from '../themes/createVisualizationColors';
 export enum GrafanaThemeType {
   Light = 'light',
   Dark = 'dark',
+  Merqury = 'merqury',
 }
 
 export interface GrafanaThemeCommons {
@@ -117,6 +118,7 @@ export interface GrafanaTheme extends GrafanaThemeCommons {
   type: GrafanaThemeType;
   isDark: boolean;
   isLight: boolean;
+  isMerqury: boolean;
   palette: {
     black: string;
     white: string;

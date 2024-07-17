@@ -29,6 +29,7 @@ module.exports = (env = {}) =>
     entry: {
       dark: './public/sass/grafana.dark.scss',
       light: './public/sass/grafana.light.scss',
+      merqury: './public/sass/grafana.merqury.scss',
     },
 
     module: {

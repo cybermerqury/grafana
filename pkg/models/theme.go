@@ -7,6 +7,7 @@ type Theme string
 const (
 	ThemeLight Theme = "light"
 	ThemeDark  Theme = "dark"
+	ThemeMerqury  Theme = "merqury"
 )
 
 func ParseTheme(str string) (Theme, error) {
@@ -15,6 +16,8 @@ func ParseTheme(str string) (Theme, error) {
 		return ThemeLight, nil
 	case string(ThemeDark):
 		return ThemeDark, nil
+	case string(ThemeMerqury):
+		return ThemeMerqury, nil
 	}
 	return ThemeDark, errors.New("unknown theme " + str)
 }

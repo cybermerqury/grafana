@@ -42,5 +42,6 @@ const createStorybookTheme = (theme: GrafanaTheme2) => {
 
 const GrafanaLight = createStorybookTheme(createTheme({ colors: { mode: 'light' } }));
 const GrafanaDark = createStorybookTheme(createTheme({ colors: { mode: 'dark' } }));
+const GrafanaMerqury = createStorybookTheme(createTheme({ colors: { mode: 'merqury' } }));
 
-export { GrafanaLight, GrafanaDark };
+export { GrafanaLight, GrafanaDark, GrafanaMerqury };

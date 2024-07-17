@@ -39,10 +39,17 @@ export function createTheme(options: NewThemeOptions = {}): GrafanaTheme2 {
   const components = createComponents(colors, shadows);
   const visualization = createVisualizationColors(colors);
 
+  const themeNameMap: { [key: string]: string } = {
+    dark: 'Dark',
+    light: 'Light',
+    merqury: 'Merqury',
+  };
+
   const theme = {
-    name: colors.mode === 'dark' ? 'Dark' : 'Light',
+    name: themeNameMap[colors.mode] || 'Dark',
     isDark: colors.mode === 'dark',
     isLight: colors.mode === 'light',
+    isMerqury: colors.mode === 'merqury',
     colors,
     breakpoints,
     spacing,

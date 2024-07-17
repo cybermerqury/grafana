@@ -178,11 +178,18 @@ export function createV1Theme(theme: Omit<GrafanaTheme2, 'v1'>): GrafanaTheme {
     formValidationMessageBg: theme.colors.error.main,
   };
 
+  const themeTypeMap: { [key: string]: GrafanaThemeType } = {
+    merqury: GrafanaThemeType.Merqury,
+    dark: GrafanaThemeType.Dark,
+    light: GrafanaThemeType.Light,
+  };
+
   return {
     ...oldCommon,
-    type: theme.colors.mode === 'dark' ? GrafanaThemeType.Dark : GrafanaThemeType.Light,
+    type: themeTypeMap[theme.colors.mode] || GrafanaThemeType.Dark,
     isDark: theme.isDark,
     isLight: theme.isLight,
+    isMerqury: theme.isMerqury,
     name: theme.name,
     palette: {
       ...basicColors,

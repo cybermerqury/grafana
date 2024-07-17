@@ -42,7 +42,7 @@ func (s ScreenshotOptions) SetDefaults() ScreenshotOptions {
 		s.Height = DefaultHeight
 	}
 	switch s.Theme {
-	case models.ThemeDark, models.ThemeLight:
+	case models.ThemeDark, models.ThemeLight, models.ThemeMerqury:
 	default:
 		s.Theme = DefaultTheme
 	}

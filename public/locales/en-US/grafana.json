@@ -257,7 +257,8 @@
     "action": {
       "change-theme": "Change theme...",
       "dark-theme": "Dark",
-      "light-theme": "Light"
+      "light-theme": "Light",
+      "merqury-theme": "Merqury"
     },
     "empty-state": {
       "message": "No results found"
@@ -1951,7 +1952,8 @@
       "current": "Current",
       "dark": "Dark",
       "field-name": "Theme",
-      "light": "Light"
+      "light": "Light",
+      "merqury": "Merqury"
     },
     "view-json": {
       "copy-button": "Copy to Clipboard"
@@ -1973,6 +1975,7 @@
       "theme": {
         "dark-label": "Dark",
         "light-label": "Light",
+        "merqury-label": "Merqury",
         "system-label": "System preference"
       }
     }

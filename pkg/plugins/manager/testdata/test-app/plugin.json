@@ -12,7 +12,8 @@
 
   "css": {
     "dark":  "css/dark.css",
-    "light":  "css/light.css"
+    "light":  "css/light.css",
+    "merqury":  "css/merqury.css"
   },
 
   "info": {

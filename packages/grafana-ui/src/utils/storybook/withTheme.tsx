@@ -10,6 +10,7 @@ type SassThemeChangeHandler = (theme: GrafanaTheme2) => void;
 const ThemeableStory = ({
   children,
   handleSassThemeChange,
+  // TODO: Ellie investigate create theme here
 }: React.PropsWithChildren<{ handleSassThemeChange: SassThemeChangeHandler }>) => {
   const theme = createTheme({ colors: { mode: useDarkMode() ? 'dark' : 'light' } });
 

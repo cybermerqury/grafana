@@ -5,7 +5,7 @@ import { palette } from './palette';
 import { DeepPartial, ThemeRichColor } from './types';
 
 /** @internal */
-export type ThemeColorsMode = 'light' | 'dark';
+export type ThemeColorsMode = 'light' | 'dark' | 'merqury';
 
 /** @internal */
 export interface ThemeColorsBase<TColor> {
@@ -248,10 +248,105 @@ class LightColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
   tonalOffset = 0.2;
 }
 
+class MerquryColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
+  mode: ThemeColorsMode = 'merqury';
+
+  // Used to get more white opacity colors
+  whiteBase = '242,233,228';//palette.merquryWhite;
+
+  border = {
+    weak: `rgba(${this.whiteBase}, 0.12)`,
+    medium: `rgba(${this.whiteBase}, 0.20)`,
+    strong: `rgba(${this.whiteBase}, 0.30)`,
+  };
+
+  text = {
+    primary: `rgb(${this.whiteBase})`,
+    // secondary: `rgba(${this.whiteBase}, 0.65)`,
+    secondary: `rgba(${palette.merquryOrangeLight}, 0.65)`,
+    // disabled: `rgba(${this.whiteBase}, 0.6)`,
+    disabled: `rgba(${palette.merquryPurpleLight}, 0.6)`,
+    link: palette.blueDarkText,
+    maxContrast: palette.white,
+  };
+
+  primary = {
+    main: palette.blueDarkMain,
+    text: palette.blueDarkText,
+    border: palette.blueDarkText,
+  };
+
+  secondary = {
+    main: `rgba(${this.whiteBase}, 0.10)`,
+    shade: `rgba(${this.whiteBase}, 0.14)`,
+    transparent: `rgba(${this.whiteBase}, 0.08)`,
+    text: this.text.primary,
+    contrastText: `rgb(${this.whiteBase})`,
+    border: `rgba(${this.whiteBase}, 0.08)`,
+  };
+
+  info = this.primary;
+
+  error = {
+    main: palette.redDarkMain,
+    text: palette.redDarkText,
+  };
+
+  success = {
+    main: palette.greenDarkMain,
+    text: palette.greenDarkText,
+  };
+
+  warning = {
+    main: palette.orangeDarkMain,
+    text: palette.orangeDarkText,
+  };
+
+  background = {
+    canvas: palette.merquryBlueDark,
+    primary: palette.merquryBlueMedium,
+    secondary: palette.merquryBlueLight,
+  };
+
+  action = {
+    hover: `rgba(${this.whiteBase}, 0.16)`,
+    selected: `rgba(${this.whiteBase}, 0.12)`,
+    selectedBorder: palette.orangeDarkMain,
+    focus: `rgba(${this.whiteBase}, 0.16)`,
+    hoverOpacity: 0.08,
+    disabledText: this.text.disabled,
+    disabledBackground: `rgba(${this.whiteBase}, 0.04)`,
+    disabledOpacity: 0.38,
+  };
+
+  gradients = {
+    brandHorizontal: 'linear-gradient(270deg, #F55F3E 0%, #FF8833 100%)',
+    brandVertical: 'linear-gradient(0.01deg, #F55F3E 0.01%, #FF8833 99.99%)',
+  };
+
+  contrastThreshold = 3;
+  hoverFactor = 0.03;
+  tonalOffset = 0.15;
+}
+
 export function createColors(colors: ThemeColorsInput): ThemeColors {
   const dark = new DarkColors();
   const light = new LightColors();
-  const base = (colors.mode ?? 'dark') === 'dark' ? dark : light;
+  const merqury = new MerquryColors();
+
+  type ColorMode = 'dark' | 'light' | 'merqury';
+  type ColorClasses = DarkColors | LightColors | MerquryColors;
+
+  const colorsNameMap: { [key in ColorMode]: ColorClasses } = {
+    dark: dark,
+    light: light,
+    merqury: merqury,
+  };
+
+  const defaultMode: ColorMode = 'dark';
+  const mode: ColorMode = (colors.mode as ColorMode) ?? defaultMode;
+
+  const base: ColorClasses = colorsNameMap[mode];
   const {
     primary = base.primary,
     secondary = base.secondary,
@@ -265,7 +360,9 @@ export function createColors(colors: ThemeColorsInput): ThemeColors {
     ...other
   } = colors;
 
+  //TODO: Add merqury contrast color
   function getContrastText(background: string, threshold: number = contrastThreshold) {
+    console.log("Contrast text ratio", getContrastRatio(dark.text.maxContrast, background, base.background.primary));
     const contrastText =
       getContrastRatio(dark.text.maxContrast, background, base.background.primary) >= threshold
         ? dark.text.maxContrast

@@ -16,6 +16,7 @@ module.exports = merge(common, {
     app: ['./public/app/index.ts'],
     dark: './public/sass/grafana.dark.scss',
     light: './public/sass/grafana.light.scss',
+    merqury: './public/sass/grafana.merqury.scss',
   },
 
   watchOptions: {

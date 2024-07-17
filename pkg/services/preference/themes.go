@@ -9,6 +9,7 @@ type ThemeDTO struct {
 var themes = []ThemeDTO{
 	{ID: "light", Type: "light"},
 	{ID: "dark", Type: "dark"},
+	{ID: "merqury", Type: "merqury"},
 	{ID: "system", Type: "dark"},
 	{ID: "midnight", Type: "dark", IsExtra: true},
 	{ID: "blue-night", Type: "dark", IsExtra: true},

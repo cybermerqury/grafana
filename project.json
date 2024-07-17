@@ -32,7 +32,8 @@
       "outputs": [
         "{workspaceRoot}/public/sass/_variables.generated.scss",
         "{workspaceRoot}/public/sass/_variables.dark.generated.scss",
-        "{workspaceRoot}/public/sass/_variables.light.generated.scss"
+        "{workspaceRoot}/public/sass/_variables.light.generated.scss",
+        "{workspaceRoot}/public/sass/_variables.merqury.generated.scss"
       ],
       "cache": true
     }

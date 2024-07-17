@@ -11,6 +11,7 @@ import { config } from '../config';
 export interface PluginCssOptions {
   light: string;
   dark: string;
+  merqury: string;
 }
 
 /**
@@ -22,7 +23,7 @@ export interface PluginCssOptions {
  */
 export async function loadPluginCss(options: PluginCssOptions): Promise<System.Module | void> {
   try {
-    const cssPath = config.bootData.user.theme === 'light' ? options.light : options.dark;
+    const cssPath = config.bootData.user.theme === 'light' ? options.light : (config.bootData.user.theme === 'dark' ? options.dark : options.merqury);
     return window.System.import(cssPath);
   } catch (err) {
     console.error(err);

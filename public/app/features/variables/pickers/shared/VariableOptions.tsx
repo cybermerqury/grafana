@@ -136,6 +136,7 @@ class VariableOptions extends PureComponent<Props> {
   }
 }
 
+// TODO: Ellie check this for checkbox
 const getStyles = stylesFactory((theme: GrafanaTheme2) => {
   const checkboxImageUrl = theme.isDark ? 'public/img/checkbox.png' : 'public/img/checkbox_white.png';
 

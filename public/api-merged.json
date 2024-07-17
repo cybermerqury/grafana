@@ -17631,7 +17631,8 @@
           "type": "string",
           "enum": [
             "light",
-            "dark"
+            "dark",
+            "merqury"
           ]
         },
         "timezone": {

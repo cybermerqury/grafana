@@ -22,6 +22,7 @@ type ManifestInfo struct {
 	App   *EntryPointInfo `json:"app,omitempty"`
 	Dark  *EntryPointInfo `json:"dark,omitempty"`
 	Light *EntryPointInfo `json:"light,omitempty"`
+	Merqury *EntryPointInfo `json:"merqury,omitempty"`
 }
 
 type EntryPointInfo struct {
@@ -118,6 +119,9 @@ func readWebAssets(r io.Reader) (*dtos.EntryPointAssets, error) {
 	if entryPoints.Light == nil || len(entryPoints.Light.Assets.CSS) == 0 {
 		return nil, fmt.Errorf("missing light entry")
 	}
+	if entryPoints.Merqury == nil || len(entryPoints.Merqury.Assets.CSS) == 0 {
+		return nil, fmt.Errorf("missing merqury entry")
+	}
 
 	entryPointJSAssets := make([]dtos.EntryPointAsset, 0)
 	for _, entry := range entryPoints.App.Assets.JS {
@@ -131,5 +135,6 @@ func readWebAssets(r io.Reader) (*dtos.EntryPointAssets, error) {
 		JSFiles: entryPointJSAssets,
 		Dark:    entryPoints.Dark.Assets.CSS[0],
 		Light:   entryPoints.Light.Assets.CSS[0],
+		Merqury:   entryPoints.Merqury.Assets.CSS[0],
 	}, nil
 }

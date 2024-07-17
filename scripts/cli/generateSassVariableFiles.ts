@@ -4,10 +4,12 @@ import { resolve } from 'path';
 import { createTheme } from '@grafana/data';
 import { darkThemeVarsTemplate } from '@grafana/ui/src/themes/_variables.dark.scss.tmpl';
 import { lightThemeVarsTemplate } from '@grafana/ui/src/themes/_variables.light.scss.tmpl';
+import { merquryThemeVarsTemplate } from '@grafana/ui/src/themes/_variables.merqury.scss.tmpl';
 import { commonThemeVarsTemplate } from '@grafana/ui/src/themes/_variables.scss.tmpl';
 
 const darkThemeVariablesPath = resolve(__dirname, 'public', 'sass', '_variables.dark.generated.scss');
 const lightThemeVariablesPath = resolve(__dirname, 'public', 'sass', '_variables.light.generated.scss');
+const merquryThemeVariablesPath = resolve(__dirname, 'public', 'sass', '_variables.merqury.generated.scss');
 const defaultThemeVariablesPath = resolve(__dirname, 'public', 'sass', '_variables.generated.scss');
 
 async function writeVariablesFile(path: string, data: string) {
@@ -22,9 +24,11 @@ async function writeVariablesFile(path: string, data: string) {
 async function generateSassVariableFiles() {
   const darkTheme = createTheme();
   const lightTheme = createTheme({ colors: { mode: 'light' } });
+  const merquryTheme = createTheme({ colors: { mode: 'merqury' } });
   try {
     await writeVariablesFile(darkThemeVariablesPath, darkThemeVarsTemplate(darkTheme));
     await writeVariablesFile(lightThemeVariablesPath, lightThemeVarsTemplate(lightTheme));
+    await writeVariablesFile(merquryThemeVariablesPath, merquryThemeVarsTemplate(merquryTheme));
     await writeVariablesFile(defaultThemeVariablesPath, commonThemeVarsTemplate(darkTheme));
   } catch (error) {
     console.error('\nWriting SASS variable files failed', error);

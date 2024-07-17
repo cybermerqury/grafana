@@ -41,4 +41,12 @@ export const palette = {
   greenLightText: '#0A764E',
   orangeLightMain: '#FF9900',
   orangeLightText: '#B5510D',
+
+  // Merqury color palette
+  merquryBlueDark: '#22223B',
+  merquryBlueMedium: '#2C2D46',
+  merquryBlueLight: '#4A4E69',
+  merquryPurpleLight: '#9A8C98',
+  merquryOrangeLight: '#C9ADA7',
+  merquryWhite: '#F2E9E4',
 };

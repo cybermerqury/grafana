@@ -145,6 +145,7 @@ export interface BootData {
   assets: {
     light: string;
     dark: string;
+    merqury: string;
   };
 }
 

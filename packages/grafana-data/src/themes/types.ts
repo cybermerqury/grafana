@@ -19,6 +19,7 @@ export interface GrafanaTheme2 {
   name: string;
   isDark: boolean;
   isLight: boolean;
+  isMerqury: boolean;
   colors: ThemeColors;
   breakpoints: ThemeBreakpoints;
   spacing: ThemeSpacing;

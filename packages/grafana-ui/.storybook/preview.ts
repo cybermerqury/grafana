@@ -20,15 +20,27 @@ import { ThemedDocsContainer } from '../src/utils/storybook/ThemedDocsContainer'
 import lightTheme from '../../../public/sass/grafana.light.scss';
 // @ts-ignore
 import darkTheme from '../../../public/sass/grafana.dark.scss';
-import { GrafanaDark, GrafanaLight } from './storybookTheme';
+// @ts-ignore
+import merquryTheme from '../../../public/sass/grafana.merqury.scss';
+import { GrafanaDark, GrafanaLight, GrafanaMerqury } from './storybookTheme';
 
 const handleThemeChange = (theme: any) => {
-  if (theme !== 'light') {
-    lightTheme.unuse();
-    darkTheme.use();
-  } else {
-    darkTheme.unuse();
-    lightTheme.use();
+  switch (theme) {
+    case 'light':
+      darkTheme.unuse();
+      merquryTheme.unuse();
+      lightTheme.use();
+      break;
+    case 'dark':
+      lightTheme.unuse();
+      merquryTheme.unuse();
+      darkTheme.use();
+      break;
+    case 'merqury':
+      lightTheme.unuse();
+      darkTheme.unuse();
+      merquryTheme.use();
+      break;
   }
 };
 
@@ -39,6 +51,7 @@ const preview: Preview = {
     darkMode: {
       dark: GrafanaDark,
       light: GrafanaLight,
+      merqury:GrafanaMerqury,
     },
     docs: {
       container: ThemedDocsContainer,

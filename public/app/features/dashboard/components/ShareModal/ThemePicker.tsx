@@ -7,6 +7,7 @@ interface Props {
   onChange: (value: string) => void;
 }
 
+// TODO: Ellie do I need to add more of this?
 export const ThemePicker = ({ selectedTheme = 'current', onChange }: Props) => {
   const themeOptions: Array<SelectableValue<string>> = [
     {

@@ -4,6 +4,7 @@ import { GrafanaTheme2 } from '@grafana/data';
 
 import { Monaco, monacoTypes } from './types';
 
+// TODO: Ellie what is monaco?
 function getColors(theme?: GrafanaTheme2): monacoTypes.editor.IColors {
   if (theme === undefined) {
     return {};

@@ -1,0 +1,19 @@
+version: '3'
+networks:
+  monitoring:
+    driver: bridge
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+services:
+  grafana:
+    image: grafana/grafana-oss:dev
+    container_name: grafana
+    ports:
+      - '3000:3000'
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    #password: root123

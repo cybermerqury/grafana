@@ -95,6 +95,14 @@ export default (navBarTree: NavModelItem[], extensionActions: CommandPaletteActi
       parent: 'preferences/theme',
       priority: PREFERENCES_PRIORITY,
     },
+    {
+      id: 'preferences/merqury-theme',
+      name: t('command-palette.action.merqury-theme', 'Merqury'),
+      keywords: 'merqury theme',
+      perform: () => changeTheme('merqury'),
+      parent: 'preferences/theme',
+      priority: PREFERENCES_PRIORITY,
+    },
   ];
 
   const navBarActions = navTreeToActions(navBarTree);
