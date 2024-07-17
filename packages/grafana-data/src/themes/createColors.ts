@@ -74,7 +74,7 @@ export interface ThemeColorsBase<TColor> {
   tonalOffset: number;
 }
 
-export interface ThemeHoverStrengh {}
+export interface ThemeHoverStrengh { }
 
 /** @beta */
 export interface ThemeColors extends ThemeColorsBase<ThemeRichColor> {
@@ -262,16 +262,18 @@ class MerquryColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
 
   text = {
     primary: `rgb(${this.whiteBase})`,
-    secondary: `rgba(${this.whiteBase}, 0.65)`,
-    disabled: `rgba(${this.whiteBase}, 0.6)`,
-    link: palette.merquryOrangeLight,
+    // secondary: `rgba(${this.whiteBase}, 0.65)`,
+    secondary: `rgba(${palette.merquryOrangeLight}, 0.65)`,
+    // disabled: `rgba(${this.whiteBase}, 0.6)`,
+    disabled: `rgba(${palette.merquryPurpleLight}, 0.6)`,
+    link: palette.blueDarkText,
     maxContrast: palette.white,
   };
 
   primary = {
-    main: palette.merquryPurpleLight,
-    text: palette.merquryOrangeLight,
-    border: palette.merquryOrangeLight,
+    main: palette.blueDarkMain,
+    text: palette.blueDarkText,
+    border: palette.blueDarkText,
   };
 
   secondary = {
@@ -310,7 +312,7 @@ class MerquryColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
     hover: `rgba(${this.whiteBase}, 0.16)`,
     selected: `rgba(${this.whiteBase}, 0.12)`,
     selectedBorder: palette.orangeDarkMain,
-    focus: `${palette.merquryPurpleLight}`,
+    focus: `rgba(${this.whiteBase}, 0.16)`,
     hoverOpacity: 0.08,
     disabledText: this.text.disabled,
     disabledBackground: `rgba(${this.whiteBase}, 0.04)`,
@@ -318,8 +320,8 @@ class MerquryColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
   };
 
   gradients = {
-    brandHorizontal: 'linear-gradient(270deg, #7C6A7A 0%, #C9ADA7 100%)',
-    brandVertical: 'linear-gradient(0.01deg, #7C6A7A 0.01%, #C9ADA7 99.99%)',
+    brandHorizontal: 'linear-gradient(270deg, #F55F3E 0%, #FF8833 100%)',
+    brandVertical: 'linear-gradient(0.01deg, #F55F3E 0.01%, #FF8833 99.99%)',
   };
 
   contrastThreshold = 3;
@@ -330,6 +332,21 @@ class MerquryColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
 export function createColors(colors: ThemeColorsInput): ThemeColors {
   const dark = new DarkColors();
   const light = new LightColors();
+  const merqury = new MerquryColors();
+
+  type ColorMode = 'dark' | 'light' | 'merqury';
+  type ColorClasses = DarkColors | LightColors | MerquryColors;
+
+  const colorsNameMap: { [key in ColorMode]: ColorClasses } = {
+    dark: dark,
+    light: light,
+    merqury: merqury,
+  };
+
+  const defaultMode: ColorMode = 'dark';
+  const mode: ColorMode = (colors.mode as ColorMode) ?? defaultMode;
+
+  const base: ColorClasses = colorsNameMap[mode];
   const merqury = new MerquryColors();
 
   type ColorMode = 'dark' | 'light' | 'merqury';
@@ -359,7 +376,9 @@ export function createColors(colors: ThemeColorsInput): ThemeColors {
   } = colors;
 
   //TODO: Add merqury contrast color
+  //TODO: Add merqury contrast color
   function getContrastText(background: string, threshold: number = contrastThreshold) {
+    console.log("Contrast text ratio", getContrastRatio(dark.text.maxContrast, background, base.background.primary));
     console.log("Contrast text ratio", getContrastRatio(dark.text.maxContrast, background, base.background.primary));
     const contrastText =
       getContrastRatio(dark.text.maxContrast, background, base.background.primary) >= threshold

@@ -25,6 +25,7 @@ type ManifestInfo struct {
 	Light   *EntryPointInfo `json:"light,omitempty"`
 	Merqury *EntryPointInfo `json:"merqury,omitempty"`
 	Swagger *EntryPointInfo `json:"swagger,omitempty"`
+	Merqury *EntryPointInfo `json:"merqury,omitempty"`
 }
 
 type EntryPointInfo struct {
@@ -129,6 +130,9 @@ func readWebAssets(r io.Reader) (*dtos.EntryPointAssets, error) {
 	}
 	if entryPoints.Light == nil || len(entryPoints.Light.Assets.CSS) == 0 {
 		return nil, fmt.Errorf("missing light entry, try running `yarn build`")
+	}
+	if entryPoints.Merqury == nil || len(entryPoints.Merqury.Assets.CSS) == 0 {
+		return nil, fmt.Errorf("missing merqury entry")
 	}
 	if entryPoints.Swagger == nil || len(entryPoints.Swagger.Assets.JS) == 0 {
 		return nil, fmt.Errorf("missing swagger entry, try running `yarn build`")
