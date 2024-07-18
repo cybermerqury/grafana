@@ -23,6 +23,8 @@
     <link rel="stylesheet" href="[[.Assets.Light]]" />
     [[ else if eq .ThemeType "dark" ]]
     <link rel="stylesheet" href="[[.Assets.Dark]]" />
+    [[ else if eq .ThemeType "merqury" ]]
+    <link rel="stylesheet" href="[[.Assets.Merqury]]" />
     [[ end ]]
 
     <script nonce="[[.Nonce]]">
@@ -248,6 +250,7 @@
 
       // Set theme to match system only on startup.
       // Do not react to changes in system theme after startup.
+      // TODO: ELlie: WIll probably need to add merqury for preferred/default themes
       if (window.grafanaBootData.user.theme === "system") {
         document.body.classList.remove("theme-system");
         var darkQuery = window.matchMedia("(prefers-color-scheme: dark)");

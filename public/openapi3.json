@@ -7727,7 +7727,8 @@
           "theme": {
             "enum": [
               "light",
-              "dark"
+              "dark",
+              "merqury"
             ],
             "type": "string"
           },
@@ -11594,6 +11595,7 @@
             "enum": [
               "light",
               "dark",
+              "merqury",
               "system"
             ],
             "type": "string"

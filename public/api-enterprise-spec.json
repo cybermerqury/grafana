@@ -5750,7 +5750,8 @@
           "type": "string",
           "enum": [
             "light",
-            "dark"
+            "dark",
+            "merqury"
           ]
         },
         "timezone": {
@@ -8013,6 +8014,7 @@
           "enum": [
             "light",
             "dark",
+            "merqury",
             "system"
           ]
         },

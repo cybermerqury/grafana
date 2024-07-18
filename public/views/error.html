@@ -12,8 +12,10 @@
 
     [[ if eq .ThemeType "light" ]]
     <link rel="stylesheet" href="[[.Assets.Light]]" />
-    [[ else ]]
+    [[ else if eq .ThemeType "dark" ]]
     <link rel="stylesheet" href="[[.Assets.Dark]]" />
+    [[ else if eq .ThemeType "merqury" ]]
+    <link rel="stylesheet" href="[[.Assets.Merqury]]" />
     [[ end ]]
 
     <link rel="icon" type="image/png" href="public/img/fav32.png" />
