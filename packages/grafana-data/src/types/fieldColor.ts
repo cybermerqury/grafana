@@ -4,6 +4,8 @@
 export enum FieldColorModeId {
   Thresholds = 'thresholds',
   PaletteClassic = 'palette-classic',
+  PaletteMerquryExtended = 'palette-merqury-extended',
+  PaletteMerquryLimited = 'palette-merqury-limited',
   PaletteClassicByName = 'palette-classic-by-name',
   PaletteSaturated = 'palette-saturated',
   ContinuousGrYlRd = 'continuous-GrYlRd',

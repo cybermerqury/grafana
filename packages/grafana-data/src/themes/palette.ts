@@ -48,5 +48,4 @@ export const palette = {
   merquryBlueLight: '#4A4E69',
   merquryPurpleLight: '#9A8C98',
   merquryOrangeLight: '#C9ADA7',
-  merquryWhite: '#F2E9E4',
 };

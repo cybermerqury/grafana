@@ -62,6 +62,26 @@ export const fieldColorModeRegistry = new Registry<FieldColorMode>(() => {
       },
     }),
     new FieldColorSchemeMode({
+      id: FieldColorModeId.PaletteMerquryExtended,
+      name: 'Merqury palette (extended)',
+      isContinuous: false,
+      isByValue: false,
+      getColors: (theme: GrafanaTheme2) => {
+        return theme.visualization.paletteMerqury;
+      },
+    }),
+    new FieldColorSchemeMode({
+      id: FieldColorModeId.PaletteMerquryLimited,
+      name: 'Merqury palette (limited)',
+      isContinuous: false,
+      isByValue: false,
+      getColors: (theme: GrafanaTheme2) => {
+        return theme.visualization.paletteMerqury.filter(
+          (color) => color.includes('one')
+        );
+      },
+    }),
+    new FieldColorSchemeMode({
       id: FieldColorModeId.PaletteClassicByName,
       name: 'Classic palette (by series name)',
       isContinuous: false,

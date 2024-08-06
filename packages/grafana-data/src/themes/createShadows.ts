@@ -17,6 +17,14 @@ export function createShadows(colors: ThemeColors): ThemeShadows {
     };
   }
 
+  else if (colors.mode === 'merqury') {
+    return {
+      z1: '0px 1px 2px rgba(23, 23, 40, 0.75)',
+      z2: '0px 4px 8px rgba(23, 23, 40, 0.75)',
+      z3: '0px 8px 24px rgb(23, 23, 40)',
+    };
+  }
+
   return {
     z1: '0px 1px 2px rgba(24, 26, 27, 0.2)',
     z2: '0px 4px 8px rgba(24, 26, 27, 0.2)',

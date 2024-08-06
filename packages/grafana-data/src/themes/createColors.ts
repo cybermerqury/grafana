@@ -262,18 +262,16 @@ class MerquryColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
 
   text = {
     primary: `rgb(${this.whiteBase})`,
-    // secondary: `rgba(${this.whiteBase}, 0.65)`,
-    secondary: `rgba(${palette.merquryOrangeLight}, 0.65)`,
-    // disabled: `rgba(${this.whiteBase}, 0.6)`,
-    disabled: `rgba(${palette.merquryPurpleLight}, 0.6)`,
-    link: palette.blueDarkText,
+    secondary: `rgba(${this.whiteBase}, 0.65)`,
+    disabled: `rgba(${this.whiteBase}, 0.6)`,
+    link: palette.merquryOrangeLight,
     maxContrast: palette.white,
   };
 
   primary = {
-    main: palette.blueDarkMain,
-    text: palette.blueDarkText,
-    border: palette.blueDarkText,
+    main: palette.merquryPurpleLight,
+    text: palette.merquryOrangeLight,
+    border: palette.merquryOrangeLight,
   };
 
   secondary = {
@@ -312,7 +310,7 @@ class MerquryColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
     hover: `rgba(${this.whiteBase}, 0.16)`,
     selected: `rgba(${this.whiteBase}, 0.12)`,
     selectedBorder: palette.orangeDarkMain,
-    focus: `rgba(${this.whiteBase}, 0.16)`,
+    focus: `${palette.merquryPurpleLight}`,
     hoverOpacity: 0.08,
     disabledText: this.text.disabled,
     disabledBackground: `rgba(${this.whiteBase}, 0.04)`,

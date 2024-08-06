@@ -299,6 +299,7 @@ const getStyles = (
     width: `${!hideQuickRanges ? '60%' : '100%'}`,
     overflow: 'auto',
     scrollbarWidth: 'thin',
+    scrollbarColor: `${theme.colors.action.focus} transparent`,
     order: isReversed ? 1 : 0,
   }),
   rightSide: css({
@@ -306,6 +307,7 @@ const getStyles = (
     borderRight: isReversed ? `1px solid ${theme.colors.border.weak}` : 'none',
     display: 'flex',
     flexDirection: 'column',
+    scrollbarColor: `${theme.colors.action.focus} transparent`,
   }),
   timeRangeFilter: css({
     padding: theme.spacing(1),

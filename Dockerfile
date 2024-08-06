@@ -182,6 +182,9 @@ COPY --from=go-src /tmp/grafana/bin/grafana* /tmp/grafana/bin/*/grafana* ./bin/
 COPY --from=js-src /tmp/grafana/public ./public
 COPY --from=js-src /tmp/grafana/LICENSE ./
 
+COPY public/img/custom_img/favicon_merqury.png /usr/share/grafana/public/img/fav32.png
+COPY public/img/custom_img/favicon_merqury.png /usr/share/grafana/public/img/apple-touch-icon.png
+
 EXPOSE 3000
 
 ARG RUN_SH=./packaging/docker/run.sh

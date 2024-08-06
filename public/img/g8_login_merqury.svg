@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 2261 1272">
+  <defs>
+    <style>
+      .cls-1 {
+        opacity: .3;
+      }
+
+      .cls-2 {
+        stroke-width: 11.1px;
+      }
+
+      .cls-2, .cls-3, .cls-4, .cls-5, .cls-6, .cls-7, .cls-8, .cls-9, .cls-10 {
+        fill: none;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-2, .cls-5 {
+        stroke: #988a96;
+      }
+
+      .cls-3 {
+        stroke-width: 22.4px;
+      }
+
+      .cls-3, .cls-6, .cls-8, .cls-9 {
+        stroke: #c9aba5;
+      }
+
+      .cls-11, .cls-12, .cls-13, .cls-14, .cls-15, .cls-16 {
+        display: none;
+      }
+
+      .cls-11, .cls-13, .cls-14, .cls-15, .cls-17, .cls-18, .cls-16 {
+        fill: #22223b;
+      }
+
+      .cls-19, .cls-14 {
+        opacity: .5;
+      }
+
+      .cls-19, .cls-20 {
+        fill: #c9aba5;
+      }
+
+      .cls-21 {
+        fill: #4c4e69;
+      }
+
+      .cls-12 {
+        opacity: .3;
+      }
+
+      .cls-22 {
+        fill: #f1e7e1;
+      }
+
+      .cls-4 {
+        stroke-width: 20.5px;
+      }
+
+      .cls-4, .cls-8, .cls-9 {
+        opacity: .7;
+      }
+
+      .cls-4, .cls-10 {
+        stroke: #4d506a;
+      }
+
+      .cls-13 {
+        opacity: .7;
+      }
+
+      .cls-13, .cls-14, .cls-15, .cls-16 {
+        isolation: isolate;
+      }
+
+      .cls-5 {
+        stroke-width: 28.3px;
+      }
+
+      .cls-6 {
+        stroke-width: 8.7px;
+      }
+
+      .cls-7 {
+        stroke: #f1e7e0;
+        stroke-width: 10.5px;
+      }
+
+      .cls-8 {
+        stroke-width: 17.8px;
+      }
+
+      .cls-15 {
+        opacity: .4;
+      }
+
+      .cls-23, .cls-24 {
+        fill: #988a96;
+      }
+
+      .cls-24 {
+        opacity: .7;
+      }
+
+      .cls-25 {
+        fill: #988a97;
+      }
+
+      .cls-9 {
+        stroke-width: 26px;
+      }
+
+      .cls-26 {
+        fill: #4d506a;
+      }
+
+      .cls-10 {
+        stroke-width: 7.6px;
+      }
+
+      .cls-27 {
+        clip-path: url(#clippath);
+      }
+
+      .cls-18 {
+        opacity: .6;
+      }
+
+      .cls-28 {
+        fill: #f0e6e2;
+      }
+
+      .cls-16 {
+        opacity: .3;
+      }
+    </style>
+    <clipPath id="clippath">
+      <rect class="cls-17" y="0" width="2261" height="1272"/>
+    </clipPath>
+  </defs>
+  <!-- Generator: Adobe Illustrator 28.6.0, SVG Export Plug-In . SVG Version: 1.2.0 Build 709)  -->
+  <g>
+    <g id="Layer_1">
+      <g>
+        <rect class="cls-17" y="0" width="2261" height="1272"/>
+        <g class="cls-27">
+          <g>
+            <rect class="cls-17" y="0" width="2261" height="1272"/>
+            <rect class="cls-11" x="-1147" y="-916" width="4532" height="2576"/>
+            <ellipse class="cls-14" cx="1130.5" cy="-102.5" rx="4422.5" ry="1438.5"/>
+            <ellipse class="cls-16" cx="615.1" cy="-400.9" rx="521.3" ry="1455.5"/>
+            <ellipse class="cls-16" cx="1372" cy="-159.5" rx="1832" ry="1455.5"/>
+            <ellipse class="cls-13" cx="400.5" cy="-693.3" rx="1655.5" ry="1488.7"/>
+            <ellipse class="cls-15" cx="2488.3" cy="712.7" rx="1461" ry="1498.7"/>
+            <g class="cls-12">
+              <image width="4783" height="5679" transform="translate(-573.1 592.1) scale(.2)" xlink:href="g8_login_merqury-1.png"/>
+            </g>
+            <g>
+              <polygon class="cls-20" points="288.7 378.1 214.6 420.9 214.6 506.4 288.7 549.2 362.8 506.4 362.8 420.9 288.7 378.1"/>
+              <path class="cls-28" d="M0,295.5l289.4,167.1v334.2L0,963.8l-289.4-167.1v-334.2L0,295.5M0,271l-310.6,179.3v358.6L0,988.3l310.6-179.3v-358.6L0,271H0Z"/>
+              <polygon class="cls-20" points="156.1 0 0 90.1 0 270.4 156.1 360.5 312.2 270.4 312.2 90.1 156.1 0"/>
+              <polygon class="cls-23" points="2085.9 489.1 1910.6 590.3 1910.6 792.7 2085.9 893.9 2261.2 792.7 2261.2 590.3 2085.9 489.1"/>
+              <polygon class="cls-6" points="2085.9 89.2 1915.3 187.7 1915.3 384.6 2085.9 483.1 2256.5 384.6 2256.5 187.7 2085.9 89.2"/>
+              <polygon class="cls-9" points="1912.9 517 1848.3 554.3 1848.3 628.9 1912.9 666.2 1977.5 628.9 1977.5 554.3 1912.9 517"/>
+              <path class="cls-21" d="M288.7,619.3l-134.8-77.8v-155.7l134.8-77.8,134.8,77.8v155.7l-134.8,77.8ZM193.2,518.8l95.5,55.1,95.5-55.1v-110.3l-95.5-55.1-95.5,55.1v110.3Z"/>
+              <polygon class="cls-18" points="2085.9 581.7 1990.8 636.6 1990.8 746.4 2085.9 801.3 2181 746.4 2181 636.6 2085.9 581.7"/>
+              <polygon class="cls-5" points="1973.5 869.1 1886.5 919.4 1886.5 1019.9 1973.5 1070.1 2060.5 1019.9 2060.5 919.4 1973.5 869.1"/>
+              <polygon class="cls-7" points="2085.9 973.4 2032.6 1004.2 2032.6 1065.8 2085.9 1096.6 2139.2 1065.8 2139.2 1004.2 2085.9 973.4"/>
+              <polygon class="cls-19" points="2198.6 852.7 2097.3 911.2 2097.3 1028.1 2198.6 1086.5 2299.9 1028.1 2299.9 911.2 2198.6 852.7"/>
+              <polygon class="cls-24" points="287.5 642.5 154.7 719.1 154.7 872.4 287.5 949.1 420.2 872.4 420.2 719.1 287.5 642.5"/>
+              <polygon class="cls-23" points="2085.9 341.2 2032.5 372.1 2032.5 433.7 2085.9 464.6 2139.3 433.7 2139.3 372.1 2085.9 341.2"/>
+              <polygon class="cls-3" points="178.1 923.4 110.1 962.7 110.1 1041.3 178.1 1080.6 246.2 1041.3 246.2 962.7 178.1 923.4"/>
+              <polygon class="cls-21" points="-.2 451.9 -154.3 540.8 -154.3 718.8 -.2 807.7 153.9 718.8 153.9 540.8 -.2 451.9"/>
+              <polygon class="cls-20" points="1973.5 920.6 1931.1 945.1 1931.1 994.1 1973.5 1018.6 2015.9 994.1 2015.9 945.1 1973.5 920.6"/>
+              <polygon class="cls-23" points="2085.9 108 2032.5 138.8 2032.5 200.4 2085.9 231.3 2139.3 200.4 2139.3 138.8 2085.9 108"/>
+              <path class="cls-28" d="M2417.4,52.6l202.3,116.8v233.6l-202.3,116.8-202.3-116.8v-233.6l202.3-116.8M2417.4,28.1l-223.5,129v258.1l223.5,129,223.5-129V157.1l-223.5-129h0Z"/>
+              <polygon class="cls-4" points="1964.2 11.9 1913.4 41.2 1913.4 99.9 1964.2 129.2 2015 99.9 2015 41.2 1964.2 11.9"/>
+              <polygon class="cls-8" points="2175.8 11 2131.6 36.5 2131.6 87.6 2175.8 113.1 2220 87.6 2220 36.5 2175.8 11"/>
+              <path class="cls-22" d="M129.8,1096.6l28.2,16.3v32.6l-28.2,16.3-28.2-16.3v-32.6l28.2-16.3M129.8,1080.6l-42.1,24.3v48.6l42.1,24.3,42.1-24.3v-48.6l-42.1-24.3h0Z"/>
+              <polygon class="cls-25" points="226.5 1149.8 193.4 1168.9 193.4 1207.1 226.5 1226.3 259.6 1207.1 259.6 1168.9 226.5 1149.8"/>
+              <polygon class="cls-26" points="331.8 953.5 278.2 984.4 278.2 1046.3 331.8 1077.3 385.4 1046.3 385.4 984.4 331.8 953.5"/>
+              <path class="cls-23" d="M154.3,1224l16.8,9.7v19.3l-16.8,9.7-16.8-9.7v-19.3l16.8-9.7M154.3,1214.7l-24.8,14.3v28.7l24.8,14.3,24.8-14.3v-28.7l-24.8-14.3h0Z"/>
+              <polygon class="cls-2" points="2020.6 1119.2 1986.5 1138.8 1986.5 1178.2 2020.6 1197.8 2054.7 1178.2 2054.7 1138.8 2020.6 1119.2"/>
+              <polygon class="cls-23" points="2149.5 1103.7 2126 1117.3 2126 1144.5 2149.5 1158.1 2173.1 1144.5 2173.1 1117.3 2149.5 1103.7"/>
+              <polygon class="cls-10" points="2085.1 1212.6 2061.6 1226.2 2061.6 1253.4 2085.1 1267 2108.7 1253.4 2108.7 1226.2 2085.1 1212.6"/>
+              <g class="cls-1">
+                <image width="1393" height="1562" transform="translate(601 97.4) scale(.2)" xlink:href="g8_login_merqury-2.png"/>
+              </g>
+              <g class="cls-1">
+                <image width="939" height="1038" transform="translate(1548.7 175.4) scale(.2)" xlink:href="g8_login_merqury-3.png"/>
+              </g>
+              <g class="cls-1">
+                <image width="1206" height="1346" transform="translate(722.6 877.4) scale(.2)" xlink:href="g8_login_merqury-4.png"/>
+              </g>
+              <g class="cls-1">
+                <image width="1468" height="1648" transform="translate(691.2 841.2) scale(.2)" xlink:href="g8_login_merqury-5.png"/>
+              </g>
+              <g class="cls-1">
+                <image width="1370" height="1535" transform="translate(1043 -18.7) scale(.2)" xlink:href="g8_login_merqury-6.png"/>
+              </g>
+              <g class="cls-1">
+                <image width="742" height="810" transform="translate(1333.9 986.4) scale(.2)" xlink:href="g8_login_merqury-7.png"/>
+              </g>
+              <g class="cls-1">
+                <image width="495" height="525" transform="translate(1244.6 1101.4) scale(.2)" xlink:href="g8_login_merqury-8.png"/>
+              </g>
+              <g class="cls-1">
+                <image width="647" height="700" transform="translate(465.1 1032.5) scale(.2)" xlink:href="g8_login_merqury-9.png"/>
+              </g>
+              <g class="cls-1">
+                <image width="742" height="810" transform="translate(453.6 8.4) scale(.2)" xlink:href="g8_login_merqury-10.png"/>
+              </g>
+              <g class="cls-1">
+                <image width="899" height="991" transform="translate(1582.3 1045.4) scale(.2)" xlink:href="g8_login_merqury-11.png"/>
+              </g>
+              <g class="cls-1">
+                <image width="898" height="991" transform="translate(1364.6 344.2) scale(.2)" xlink:href="g8_login_merqury-12.png"/>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

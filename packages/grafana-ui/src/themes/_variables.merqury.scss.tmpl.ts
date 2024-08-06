@@ -12,7 +12,7 @@ export const merquryThemeVarsTemplate = (theme: GrafanaTheme2) =>
 // Global values
 // --------------------------------------------------
 
-$theme-name: dark;
+$theme-name: merqury;
 
 $colors-action-hover: ${theme.colors.action.hover};
 $colors-action-selected: ${theme.colors.action.selected};

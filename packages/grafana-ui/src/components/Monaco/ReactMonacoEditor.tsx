@@ -23,6 +23,6 @@ export const ReactMonacoEditor = (props: ReactMonacoEditorProps) => {
   );
 
   return (
-    <Editor {...props} theme={theme.isDark ? 'grafana-dark' : 'grafana-light'} beforeMount={onMonacoBeforeMount} />
+    <Editor {...props} theme={theme.isLight ? 'grafana-light' : 'grafana-dark'} beforeMount={onMonacoBeforeMount} />
   );
 };

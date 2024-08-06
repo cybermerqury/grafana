@@ -68,7 +68,7 @@ export function createComponents(colors: ThemeColors, shadows: ThemeShadows): Th
     borderColor: colors.border.medium,
     borderHover: colors.border.strong,
     text: colors.text.primary,
-    background: colors.mode === 'dark' ? colors.background.canvas : colors.background.primary,
+    background: colors.mode === 'light' ? colors.background.primary : colors.background.canvas,
   };
 
   return {
@@ -91,7 +91,16 @@ export function createComponents(colors: ThemeColors, shadows: ThemeShadows): Th
       padding: 1,
     },
     overlay: {
-      background: colors.mode === 'dark' ? 'rgba(63, 62, 62, 0.45)' : 'rgba(208, 209, 211, 0.24)',
+      background: (() => {
+        switch (colors.mode) {
+          case 'light':
+            return 'rgba(208, 209, 211, 0.24)';
+          case 'merqury':
+            return 'rgba(154, 140, 152, 0.45)';
+          default:
+            return 'rgba(63, 62, 62, 0.45)'; //dark as default
+        }
+      })(),
     },
     sidemenu: {
       width: 57,

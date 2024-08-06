@@ -8,6 +8,7 @@ import { ThemeColors } from './createColors';
 export interface ThemeVisualizationColors {
   /** Only for internal use by color schemes */
   palette: string[];
+  paletteMerqury: string[];
   /** Lookup the real color given the name */
   getColorByName: (color: string) => string;
   /** Colors organized by hue */
@@ -84,10 +85,12 @@ export function createVisualizationColors(colors: ThemeColors): ThemeVisualizati
   };
 
   const palette = getClassicPalette();
+  const paletteMerqury = getMerquryPalette();
 
   return {
     hues,
     palette,
+    paletteMerqury,
     getColorByName,
   };
 }
@@ -152,6 +155,40 @@ function getDarkHues(): ThemeVizHue[] {
         { color: '#B877D9', name: 'purple', aliases: [], primary: true },
         { color: '#A352CC', name: 'semi-dark-purple', aliases: [] },
         { color: '#8F3BB8', name: 'dark-purple', aliases: [] },
+      ],
+    },
+    // TODO: see if you can filter by primary property instead
+    {
+      name: 'merqury-blue',
+      shades: [
+        { color: '#7696B6', name: 'blue-one', aliases: [] },
+        { color: '#8095FF', name: 'blue-two', aliases: [] },
+        { color: '#3057E5', name: 'blue-three', aliases: [] },
+        { color: '#4A6DB5', name: 'blue-four', aliases: [] },
+      ],
+    },
+    {
+      name: 'merqury-purple',
+      shades: [
+        { color: '#998297', name: 'purple-one', aliases: [] },
+        { color: '#AA3F68', name: 'purple-two', aliases: [] },
+        { color: '#9E6FEF', name: 'purple-three', aliases: [] },
+        { color: '#996894', name: 'purple-four', aliases: [] },
+      ],
+    },
+    {
+      name: 'merqury-red',
+      shades: [
+        { color: '#CEB3AF', name: 'red-one', aliases: [] },
+        { color: '#BC6F3B', name: 'red-two', aliases: [] },
+        { color: '#CC8D71', name: 'red-three', aliases: [] },
+        { color: '#D82F23', name: 'red-four', aliases: [] },
+      ],
+    },
+    {
+      name: 'merqury-white',
+      shades: [
+        { color: '#F2E9E4', name: 'white-one', aliases: [] },
       ],
     },
   ];
@@ -282,6 +319,26 @@ function getClassicPalette() {
     '#BADFF4',
     '#F9D9F9',
     '#DEDAF7',
+  ];
+}
+
+function getMerquryPalette() {
+  // Todo replace these with named colors (as many as possible)
+
+  return [
+    'blue-one',
+    'purple-one',
+    'red-one',
+    'white-one',
+    'blue-two',
+    'purple-two',
+    'red-two', //
+    'blue-three',
+    'purple-three',
+    'red-three',
+    'blue-four',
+    'purple-four',
+    'red-four', //
   ];
 }
 

@@ -55,4 +55,16 @@ export default function defineThemes(monaco: Monaco, theme?: GrafanaTheme2) {
       { token: 'tag', foreground: normalizeColorForMonaco(theme?.visualization.getColorByName('green')) },
     ],
   });
+
+  monaco.editor.defineTheme('grafana-merqury', {
+    base: 'vs-dark',
+    inherit: true,
+    colors: colors,
+    // fallback syntax highlighting for languages that microsoft doesn't handle (ex cloudwatch's metric math)
+    rules: [
+      { token: 'predefined', foreground: normalizeColorForMonaco(theme?.visualization.getColorByName('purple')) },
+      { token: 'operator', foreground: normalizeColorForMonaco(theme?.visualization.getColorByName('orange')) },
+      { token: 'tag', foreground: normalizeColorForMonaco(theme?.visualization.getColorByName('green')) },
+    ],
+  });
 }

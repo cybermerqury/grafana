@@ -7,8 +7,8 @@ import { RawListValue } from './RawListItem';
 
 const getStyles = (theme: GrafanaTheme2) => {
   // Borrowed from the monaco styles
-  const reddish = theme.isDark ? '#ce9178' : '#a31515';
-  const greenish = theme.isDark ? '#73bf69' : '#56a64b';
+  const reddish = theme.isLight ? '#a31515' : '#ce9178';
+  const greenish = theme.isLight ? '#56a64b' : '#73bf69';
 
   return {
     metricName: css`
