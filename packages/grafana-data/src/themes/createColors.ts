@@ -318,8 +318,8 @@ class MerquryColors implements ThemeColorsBase<Partial<ThemeRichColor>> {
   };
 
   gradients = {
-    brandHorizontal: 'linear-gradient(270deg, #F55F3E 0%, #FF8833 100%)',
-    brandVertical: 'linear-gradient(0.01deg, #F55F3E 0.01%, #FF8833 99.99%)',
+    brandHorizontal: 'linear-gradient(270deg, #7C6A7A 0%, #C9ADA7 100%)',
+    brandVertical: 'linear-gradient(0.01deg, #7C6A7A 0.01%, #C9ADA7 99.99%)',
   };
 
   contrastThreshold = 3;

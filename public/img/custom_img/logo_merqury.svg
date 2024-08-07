@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="svg12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 74 74">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #22223b;
+      }
+
+      .cls-1, .cls-2, .cls-3, .cls-4 {
+        stroke: #f2e9e4;
+        stroke-linejoin: round;
+      }
+
+      .cls-2 {
+        fill: #4a4e69;
+      }
+
+      .cls-3 {
+        fill: #9a8c98;
+      }
+
+      .cls-4 {
+        fill: #c9ada7;
+      }
+    </style>
+  </defs>
+  <path id="path2" class="cls-1" d="M7,19L37,1l30,18v36l-30,18L7,55V19Z"/>
+  <path id="path4" class="cls-2" d="M37,1L7,55h60L37,1Z"/>
+  <path id="path6" class="cls-3" d="M22,28.25l15-9.25,15,9.25v17.75l-15,8.75-15-8.75v-17.75Z"/>
+  <path id="path8" class="cls-4" d="M22,28.25l15,26.5,15-26.5h-30Z"/>
+</svg>

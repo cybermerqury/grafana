@@ -184,6 +184,7 @@ COPY --from=js-src /tmp/grafana/LICENSE ./
 
 COPY public/img/custom_img/favicon_merqury.png /usr/share/grafana/public/img/fav32.png
 COPY public/img/custom_img/favicon_merqury.png /usr/share/grafana/public/img/apple-touch-icon.png
+COPY public/img/custom_img/grafana_icon.svg /usr/share/grafana/public/img/grafana_icon.svg
 
 EXPOSE 3000
 

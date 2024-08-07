@@ -6,8 +6,9 @@ export const cardStyle = (theme: GrafanaTheme2, complete: boolean) => {
   const completeGradient = 'linear-gradient(to right, #5182CC 0%, #245BAF 100%)';
   const darkThemeGradients = complete ? completeGradient : 'linear-gradient(to right, #f05a28 0%, #fbca0a 100%)';
   const lightThemeGradients = complete ? completeGradient : 'linear-gradient(to right, #FBCA0A 0%, #F05A28 100%)';
+  const merquryThemeGradients = complete ? completeGradient : 'linear-gradient(to right, #7C6A7A 0%, #C9ADA7 100%)';
 
-  const borderGradient = theme.isDark ? darkThemeGradients : lightThemeGradients;
+  const borderGradient = theme.isDark ? darkThemeGradients : theme.isLight ? lightThemeGradients : merquryThemeGradients;
 
   return `
       background-color: ${theme.colors.background.secondary};
