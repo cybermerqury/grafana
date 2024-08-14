@@ -42,6 +42,7 @@ type EntryPointAssets struct {
 	Dark               string            `json:"dark"`
 	Merqury              string            `json:"merqury"`
 	Light              string            `json:"light"`
+	Swagger            []EntryPointAsset `json:"swagger"`
 }
 
 type EntryPointAsset struct {
@@ -59,5 +60,8 @@ func (a *EntryPointAssets) SetContentDeliveryURL(prefix string) {
 	a.Merqury = prefix + a.Merqury
 	for i, p := range a.JSFiles {
 		a.JSFiles[i].FilePath = prefix + p.FilePath
+	}
+	for i, p := range a.Swagger {
+		a.Swagger[i].FilePath = prefix + p.FilePath
 	}
 }
