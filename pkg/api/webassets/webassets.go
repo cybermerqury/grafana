@@ -122,13 +122,16 @@ func readWebAssets(r io.Reader) (*dtos.EntryPointAssets, error) {
 	}
 
 	if entryPoints.App == nil || len(entryPoints.App.Assets.JS) == 0 {
-		return nil, fmt.Errorf("missing app entry")
+		return nil, fmt.Errorf("missing app entry, try running `yarn build`")
 	}
 	if entryPoints.Dark == nil || len(entryPoints.Dark.Assets.CSS) == 0 {
-		return nil, fmt.Errorf("missing dark entry")
+		return nil, fmt.Errorf("missing dark entry, try running `yarn build`")
 	}
 	if entryPoints.Light == nil || len(entryPoints.Light.Assets.CSS) == 0 {
-		return nil, fmt.Errorf("missing light entry")
+		return nil, fmt.Errorf("missing light entry, try running `yarn build`")
+	}
+	if entryPoints.Swagger == nil || len(entryPoints.Swagger.Assets.JS) == 0 {
+		return nil, fmt.Errorf("missing swagger entry, try running `yarn build`")
 	}
 	if entryPoints.Merqury == nil || len(entryPoints.Merqury.Assets.CSS) == 0 {
 		return nil, fmt.Errorf("missing merqury entry")
