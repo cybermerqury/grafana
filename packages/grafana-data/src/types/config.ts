@@ -62,6 +62,7 @@ export interface GrafanaJavascriptAgentConfig {
   errorInstrumentalizationEnabled: boolean;
   consoleInstrumentalizationEnabled: boolean;
   webVitalsInstrumentalizationEnabled: boolean;
+  tracingInstrumentalizationEnabled: boolean;
   apiKey: string;
 }
 
@@ -234,6 +235,7 @@ export interface GrafanaConfig {
   listDashboardScopesEndpoint?: string;
   listScopesEndpoint?: string;
   reportingStaticContext?: Record<string, string>;
+  exploreDefaultTimeOffset?: string;
 
   // The namespace to use for kubernetes apiserver requests
   namespace: string;
