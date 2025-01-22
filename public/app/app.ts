@@ -6,8 +6,6 @@ import 'file-saver';
 import 'jquery';
 import 'vendor/bootstrap/bootstrap';
 
-import 'app/features/all';
-
 import _ from 'lodash'; // eslint-disable-line lodash/import-scope
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -38,8 +36,11 @@ import {
   setReturnToPreviousHook,
   setPluginExtensionsHook,
   setPluginComponentHook,
+  setPluginComponentsHook,
   setCurrentUser,
   setChromeHeaderHeightHook,
+  setPluginLinksHook,
+  setCorrelationsService,
 } from '@grafana/runtime';
 import { setPanelDataErrorView } from '@grafana/runtime/src/components/PanelDataErrorView';
 import { setPanelRenderer } from '@grafana/runtime/src/components/PanelRenderer';
@@ -56,17 +57,19 @@ import { AppChromeService } from './core/components/AppChrome/AppChromeService';
 import { getAllOptionEditors, getAllStandardFieldConfigs } from './core/components/OptionsUI/registry';
 import { PluginPage } from './core/components/Page/PluginPage';
 import { GrafanaContextType, useChromeHeaderHeight, useReturnToPreviousInternal } from './core/context/GrafanaContext';
-import { initIconCache } from './core/icons/iconBundle';
+import { initializeCrashDetection } from './core/crash';
 import { initializeI18n } from './core/internationalization';
 import { setMonacoEnv } from './core/monacoEnv';
 import { interceptLinkClicks } from './core/navigation/patch/interceptLinkClicks';
+import { CorrelationsService } from './core/services/CorrelationsService';
 import { NewFrontendAssetsChecker } from './core/services/NewFrontendAssetsChecker';
 import { backendSrv } from './core/services/backend_srv';
-import { contextSrv } from './core/services/context_srv';
+import { contextSrv, RedirectToUrlKey } from './core/services/context_srv';
 import { Echo } from './core/services/echo/Echo';
 import { reportPerformance } from './core/services/echo/EchoSrv';
 import { PerformanceBackend } from './core/services/echo/backends/PerformanceBackend';
 import { ApplicationInsightsBackend } from './core/services/echo/backends/analytics/ApplicationInsightsBackend';
+import { BrowserConsoleBackend } from './core/services/echo/backends/analytics/BrowseConsoleBackend';
 import { GA4EchoBackend } from './core/services/echo/backends/analytics/GA4Backend';
 import { GAEchoBackend } from './core/services/echo/backends/analytics/GABackend';
 import { RudderstackBackend } from './core/services/echo/backends/analytics/RudderstackBackend';
@@ -82,12 +85,13 @@ import { initGrafanaLive } from './features/live';
 import { PanelDataErrorView } from './features/panel/components/PanelDataErrorView';
 import { PanelRenderer } from './features/panel/components/PanelRenderer';
 import { DatasourceSrv } from './features/plugins/datasource_srv';
-import { getCoreExtensionConfigurations } from './features/plugins/extensions/getCoreExtensionConfigurations';
 import { createPluginExtensionsGetter } from './features/plugins/extensions/getPluginExtensions';
-import { ReactivePluginExtensionsRegistry } from './features/plugins/extensions/reactivePluginExtensionRegistry';
-import { ExposedComponentsRegistry } from './features/plugins/extensions/registry/ExposedComponentsRegistry';
-import { createUsePluginComponent } from './features/plugins/extensions/usePluginComponent';
+import { pluginExtensionRegistries } from './features/plugins/extensions/registry/setup';
+import { usePluginComponent } from './features/plugins/extensions/usePluginComponent';
+import { usePluginComponents } from './features/plugins/extensions/usePluginComponents';
 import { createUsePluginExtensions } from './features/plugins/extensions/usePluginExtensions';
+import { usePluginLinks } from './features/plugins/extensions/usePluginLinks';
+import { getAppPluginsToAwait, getAppPluginsToPreload } from './features/plugins/extensions/utils';
 import { importPanelPlugin, syncGetPanelPlugin } from './features/plugins/importPanelPlugin';
 import { preloadPlugins } from './features/plugins/pluginPreloader';
 import { QueryRunner } from './features/query/state/QueryRunner';
@@ -135,7 +139,6 @@ export class GrafanaApp {
 
       setBackendSrv(backendSrv);
       initEchoSrv();
-      initIconCache();
       // This needs to be done after the `initEchoSrv` since it is being used under the hood.
       startMeasure('frontend_app_init');
 
@@ -145,6 +148,7 @@ export class GrafanaApp {
       setPluginPage(PluginPage);
       setPanelDataErrorView(PanelDataErrorView);
       setLocationSrv(locationService);
+      setCorrelationsService(new CorrelationsService());
       setEmbeddedDashboard(EmbeddedDashboardLazy);
       setTimeZoneResolver(() => config.bootData.user.timezone);
       initGrafanaLive();
@@ -194,6 +198,10 @@ export class GrafanaApp {
         getPanelPluginFromCache: syncGetPanelPlugin,
       });
 
+      if (config.featureToggles.useSessionStorageForRedirection) {
+        handleRedirectTo();
+      }
+
       locationUtil.initialize({
         config,
         getTimeRangeForUrl: getTimeSrv().timeRangeForUrl,
@@ -209,35 +217,19 @@ export class GrafanaApp {
       setDataSourceSrv(dataSourceSrv);
       initWindowRuntime();
 
-      // Initialize plugin extensions
-      const extensionsRegistry = new ReactivePluginExtensionsRegistry();
-      extensionsRegistry.register({
-        pluginId: 'grafana',
-        extensionConfigs: getCoreExtensionConfigurations(),
-        exposedComponentConfigs: [],
-      });
-
-      const exposedComponentsRegistry = new ExposedComponentsRegistry();
-
       if (contextSrv.user.orgRole !== '') {
-        // The "cloud-home-app" is registering banners once it's loaded, and this can cause a rerender in the AppChrome if it's loaded after the Grafana app init.
-        // TODO: remove the following exception once the issue mentioned above is fixed.
-        const awaitedAppPluginIds = ['cloud-home-app'];
-        const awaitedAppPlugins = Object.values(config.apps).filter((app) => awaitedAppPluginIds.includes(app.id));
-        const appPlugins = Object.values(config.apps).filter((app) => !awaitedAppPluginIds.includes(app.id));
+        const appPluginsToAwait = getAppPluginsToAwait();
+        const appPluginsToPreload = getAppPluginsToPreload();
 
-        preloadPlugins(appPlugins, extensionsRegistry, exposedComponentsRegistry);
-        await preloadPlugins(
-          awaitedAppPlugins,
-          extensionsRegistry,
-          exposedComponentsRegistry,
-          'frontend_awaited_plugins_preload'
-        );
+        preloadPlugins(appPluginsToPreload);
+        await preloadPlugins(appPluginsToAwait);
       }
 
-      setPluginExtensionGetter(createPluginExtensionsGetter(extensionsRegistry));
-      setPluginExtensionsHook(createUsePluginExtensions(extensionsRegistry));
-      setPluginComponentHook(createUsePluginComponent(exposedComponentsRegistry));
+      setPluginExtensionGetter(createPluginExtensionsGetter(pluginExtensionRegistries));
+      setPluginExtensionsHook(createUsePluginExtensions(pluginExtensionRegistries));
+      setPluginLinksHook(usePluginLinks);
+      setPluginComponentHook(usePluginComponent);
+      setPluginComponentsHook(usePluginComponents);
 
       // initialize chrome service
       const queryParams = locationService.getSearchObject();
@@ -269,6 +261,10 @@ export class GrafanaApp {
       setChromeHeaderHeightHook(useChromeHeaderHeight);
 
       initializeScopes();
+
+      if (config.featureToggles.crashDetection) {
+        initializeCrashDetection();
+      }
 
       const root = createRoot(document.getElementById('reactRoot')!);
       root.render(
@@ -321,6 +317,15 @@ function initEchoSrv() {
   }
 
   if (config.grafanaJavascriptAgent.enabled) {
+    // Ignore Rudderstack URLs
+    const rudderstackUrls = [
+      config.rudderstackConfigUrl,
+      config.rudderstackDataPlaneUrl,
+      config.rudderstackIntegrationsUrl,
+    ]
+      .filter(Boolean)
+      .map((url) => new RegExp(`${url}.*.`));
+
     registerEchoBackend(
       new GrafanaJavascriptAgentBackend({
         ...config.grafanaJavascriptAgent,
@@ -333,6 +338,7 @@ function initEchoSrv() {
           id: String(config.bootData.user?.id),
           email: config.bootData.user?.email,
         },
+        ignoreUrls: rudderstackUrls,
       })
     );
   }
@@ -376,6 +382,10 @@ function initEchoSrv() {
       })
     );
   }
+
+  if (config.analyticsConsoleReporting) {
+    registerEchoBackend(new BrowserConsoleBackend());
+  }
 }
 
 /**
@@ -387,6 +397,37 @@ function reportMetricPerformanceMark(metricName: string, prefix = '', suffix = '
   if (metric) {
     const metricName = metric.name.replace(/-/g, '_');
     reportPerformance(`${prefix}${metricName}${suffix}`, Math.round(metric.startTime) / 1000);
+  }
+}
+
+function handleRedirectTo(): void {
+  const queryParams = locationService.getSearch();
+  const redirectToParamKey = 'redirectTo';
+
+  if (queryParams.has(redirectToParamKey) && window.location.pathname !== '/') {
+    const rawRedirectTo = queryParams.get(redirectToParamKey)!;
+    window.sessionStorage.setItem(RedirectToUrlKey, encodeURIComponent(rawRedirectTo));
+    queryParams.delete(redirectToParamKey);
+    window.history.replaceState({}, '', `${window.location.pathname}${queryParams.size > 0 ? `?${queryParams}` : ''}`);
+    return;
+  }
+
+  if (!contextSrv.user.isSignedIn) {
+    return;
+  }
+
+  const redirectTo = window.sessionStorage.getItem(RedirectToUrlKey);
+  if (!redirectTo) {
+    return;
+  }
+
+  window.sessionStorage.removeItem(RedirectToUrlKey);
+  const decodedRedirectTo = decodeURIComponent(redirectTo);
+  if (decodedRedirectTo.startsWith('/goto/')) {
+    // In this case there should be a request to the backend
+    window.location.replace(decodedRedirectTo);
+  } else {
+    locationService.replace(decodedRedirectTo);
   }
 }
 

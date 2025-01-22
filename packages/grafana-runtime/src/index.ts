@@ -54,3 +54,15 @@ export { setReturnToPreviousHook, useReturnToPrevious } from './utils/returnToPr
 export { setChromeHeaderHeightHook, useChromeHeaderHeight } from './utils/chromeHeaderHeight';
 export { type EmbeddedDashboardProps, EmbeddedDashboard, setEmbeddedDashboard } from './components/EmbeddedDashboard';
 export { hasPermission, hasPermissionInMetadata, hasAllPermissions, hasAnyPermission } from './utils/rbac';
+export { QueryEditorWithMigration } from './components/QueryEditorWithMigration';
+export { type MigrationHandler, isMigrationHandler, migrateQuery, migrateRequest } from './utils/migrationHandler';
+export { usePluginUserStorage } from './utils/userStorage';
+export {
+  type CorrelationsService,
+  type CorrelationData,
+  type CorrelationsData,
+  type CorrelationExternal,
+  type CorrelationQuery,
+  getCorrelationsService,
+  setCorrelationsService,
+} from './services/CorrelationsService';

@@ -2,7 +2,7 @@ import { Scope, ScopeDashboardBinding, ScopeNode, ScopeSpec } from '@grafana/dat
 import { config, getBackendSrv } from '@grafana/runtime';
 import { ScopedResourceClient } from 'app/features/apiserver/client';
 
-import { NodeReason, NodesMap, SelectedScope, SuggestedDashboard, TreeScope } from './types';
+import { NodeReason, NodesMap, SelectedScope, TreeScope } from './types';
 import { getBasicScope, mergeScopes } from './utils';
 
 const group = 'scope.grafana.app';
@@ -12,7 +12,7 @@ const namespace = config.namespace ?? 'default';
 const nodesEndpoint = `/apis/${group}/${version}/namespaces/${namespace}/find/scope_node_children`;
 const dashboardsEndpoint = `/apis/${group}/${version}/namespaces/${namespace}/find/scope_dashboard_bindings`;
 
-const scopesClient = new ScopedResourceClient<ScopeSpec, 'Scope'>({
+const scopesClient = new ScopedResourceClient<ScopeSpec, unknown, 'Scope'>({
   group,
   version,
   resource: 'scopes',
@@ -97,24 +97,4 @@ export async function fetchDashboards(scopeNames: string[]): Promise<ScopeDashbo
   } catch (err) {
     return [];
   }
-}
-
-export async function fetchSuggestedDashboards(scopeNames: string[]): Promise<SuggestedDashboard[]> {
-  const items = await fetchDashboards(scopeNames);
-
-  return Object.values(
-    items.reduce<Record<string, SuggestedDashboard>>((acc, item) => {
-      if (!acc[item.spec.dashboard]) {
-        acc[item.spec.dashboard] = {
-          dashboard: item.spec.dashboard,
-          dashboardTitle: item.spec.dashboardTitle,
-          items: [],
-        };
-      }
-
-      acc[item.spec.dashboard].items.push(item);
-
-      return acc;
-    }, {})
-  );
 }

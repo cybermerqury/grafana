@@ -20,6 +20,7 @@ import (
 
 	"github.com/grafana/grafana/pkg/api"
 	"github.com/grafana/grafana/pkg/expr"
+	"github.com/grafana/grafana/pkg/services/accesscontrol"
 	"github.com/grafana/grafana/pkg/services/folder"
 	apimodels "github.com/grafana/grafana/pkg/services/ngalert/api/tooling/definitions"
 	ngmodels "github.com/grafana/grafana/pkg/services/ngalert/models"
@@ -233,6 +234,7 @@ func convertGettableGrafanaRuleToPostable(gettable *apimodels.GettableGrafanaRul
 		ExecErrState:         gettable.ExecErrState,
 		IsPaused:             &gettable.IsPaused,
 		NotificationSettings: gettable.NotificationSettings,
+		Metadata:             gettable.Metadata,
 	}
 }
 
@@ -272,6 +274,42 @@ func (a apiClient) ReloadCachedPermissions(t *testing.T) {
 	require.Equalf(t, http.StatusOK, resp.StatusCode, "failed to reload permissions cache")
 }
 
+// AssignReceiverPermission sends a request to access control API to assign permissions to a user, role, or team on a receiver.
+func (a apiClient) AssignReceiverPermission(t *testing.T, receiverUID string, cmd accesscontrol.SetResourcePermissionCommand) (int, string) {
+	t.Helper()
+
+	var assignment string
+	var assignTo string
+	if cmd.UserID != 0 {
+		assignment = "users"
+		assignTo = fmt.Sprintf("%d", cmd.UserID)
+	} else if cmd.TeamID != 0 {
+		assignment = "teams"
+		assignTo = fmt.Sprintf("%d", cmd.TeamID)
+	} else {
+		assignment = "builtInRoles"
+		assignTo = cmd.BuiltinRole
+	}
+
+	body := strings.NewReader(fmt.Sprintf(`{"permission": "%s"}`, cmd.Permission))
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/api/access-control/receivers/%s/%s/%s", a.url, receiverUID, assignment, assignTo), body)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	b, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	return resp.StatusCode, string(b)
+}
+
 // CreateFolder creates a folder for storing our alerts, and then refreshes the permission cache to make sure that following requests will be accepted
 func (a apiClient) CreateFolder(t *testing.T, uID string, title string, parentUID ...string) {
 	t.Helper()
@@ -297,6 +335,19 @@ func (a apiClient) CreateFolder(t *testing.T, uID string, title string, parentUI
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	a.ReloadCachedPermissions(t)
+}
+
+func (a apiClient) ReloadAlertingFileProvisioning(t *testing.T) {
+	t.Helper()
+
+	u := fmt.Sprintf("%s/api/admin/provisioning/alerting/reload", a.url)
+	// nolint:gosec
+	resp, err := http.Post(u, "application/json", nil)
+	defer func() {
+		require.NoError(t, resp.Body.Close())
+	}()
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func (a apiClient) GetOrgQuotaLimits(t *testing.T, orgID int64) (int64, int64) {
@@ -876,6 +927,44 @@ func (a apiClient) EnsureReceiver(t *testing.T, receiver apimodels.EmbeddedConta
 
 	_, status, body := a.CreateReceiverWithStatus(t, receiver)
 	require.Equalf(t, http.StatusAccepted, status, body)
+}
+
+func (a apiClient) ExportReceiver(t *testing.T, name string, format string, decrypt bool) string {
+	t.Helper()
+	u, err := url.Parse(fmt.Sprintf("%s/api/v1/provisioning/contact-points/export", a.url))
+	require.NoError(t, err)
+	q := url.Values{}
+	q.Set("name", name)
+	q.Set("format", format)
+	q.Set("decrypt", fmt.Sprintf("%v", decrypt))
+	u.RawQuery = q.Encode()
+
+	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	require.NoError(t, err)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	require.NoError(t, err)
+
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	requireStatusCode(t, http.StatusOK, resp.StatusCode, string(body))
+	return string(body)
+}
+
+func (a apiClient) ExportReceiverTyped(t *testing.T, name string, decrypt bool) apimodels.ContactPointExport {
+	t.Helper()
+
+	response := a.ExportReceiver(t, name, "json", decrypt)
+
+	var export apimodels.AlertingFileExport
+	require.NoError(t, json.Unmarshal([]byte(response), &export))
+	require.Len(t, export.ContactPoints, 1)
+	return export.ContactPoints[0]
 }
 
 func (a apiClient) GetAlertmanagerConfigWithStatus(t *testing.T) (apimodels.GettableUserConfig, int, string) {

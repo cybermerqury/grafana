@@ -3,10 +3,11 @@ package request
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"k8s.io/apiserver/pkg/endpoints/request"
 
-	"github.com/grafana/authlib/claims"
+	claims "github.com/grafana/authlib/types"
 	"github.com/grafana/grafana/pkg/apimachinery/identity"
 	"github.com/grafana/grafana/pkg/setting"
 )
@@ -17,8 +18,13 @@ type NamespaceMapper = claims.NamespaceFormatter
 // GetNamespaceMapper returns a function that will convert orgIds into a consistent namespace
 func GetNamespaceMapper(cfg *setting.Cfg) NamespaceMapper {
 	if cfg != nil && cfg.StackID != "" {
-		//val := claims.CloudNamespaceFormatter(cfg.Sta)
-		return func(orgId int64) string { return "stack-" + cfg.StackID }
+		stackId, err := strconv.ParseInt(cfg.StackID, 10, 64)
+		if err != nil {
+			stackId = 0
+		}
+
+		cloudNamespace := claims.CloudNamespaceFormatter(stackId)
+		return func(_ int64) string { return cloudNamespace }
 	}
 	return claims.OrgNamespaceFormatter
 }

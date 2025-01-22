@@ -9,8 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/grafana/authlib/claims"
-	"github.com/grafana/grafana/pkg/apimachinery/identity"
+	claims "github.com/grafana/authlib/types"
 	"github.com/grafana/grafana/pkg/components/apikeygen"
 	"github.com/grafana/grafana/pkg/components/satokengen"
 	"github.com/grafana/grafana/pkg/services/apikey"
@@ -189,108 +188,6 @@ func TestAPIKey_Test(t *testing.T) {
 	}
 }
 
-func TestAPIKey_GetAPIKeyIDFromIdentity(t *testing.T) {
-	type TestCase struct {
-		desc             string
-		expectedKey      *apikey.APIKey
-		expectedIdentity *authn.Identity
-		expectedError    error
-		expectedKeyID    int64
-		expectedExists   bool
-	}
-
-	tests := []TestCase{
-		{
-			desc: "should return API Key ID for valid token that is connected to service account",
-			expectedKey: &apikey.APIKey{
-				ID:               1,
-				OrgID:            1,
-				Key:              hash,
-				ServiceAccountId: intPtr(1),
-			},
-			expectedIdentity: &authn.Identity{
-				ID:              "1",
-				Type:            claims.TypeServiceAccount,
-				OrgID:           1,
-				Name:            "test",
-				AuthenticatedBy: login.APIKeyAuthModule,
-			},
-			expectedKeyID:  1,
-			expectedExists: true,
-		},
-		{
-			desc: "should return API Key ID for valid token for API key",
-			expectedKey: &apikey.APIKey{
-				ID:    2,
-				OrgID: 1,
-				Key:   hash,
-			},
-			expectedIdentity: &authn.Identity{
-				ID:              "2",
-				Type:            claims.TypeAPIKey,
-				OrgID:           1,
-				Name:            "test",
-				AuthenticatedBy: login.APIKeyAuthModule,
-			},
-			expectedKeyID:  2,
-			expectedExists: true,
-		},
-		{
-			desc: "should not return any ID when the request is not made by API key or service account",
-			expectedKey: &apikey.APIKey{
-				ID:    2,
-				OrgID: 1,
-				Key:   hash,
-			},
-			expectedIdentity: &authn.Identity{
-				ID:              "2",
-				Type:            claims.TypeUser,
-				OrgID:           1,
-				Name:            "test",
-				AuthenticatedBy: login.APIKeyAuthModule,
-			},
-			expectedKeyID:  -1,
-			expectedExists: false,
-		},
-		{
-			desc: "should not return any ID when the can't fetch API Key",
-			expectedKey: &apikey.APIKey{
-				ID:    1,
-				OrgID: 1,
-				Key:   hash,
-			},
-			expectedIdentity: &authn.Identity{
-				ID:              "2",
-				Type:            claims.TypeServiceAccount,
-				OrgID:           1,
-				Name:            "test",
-				AuthenticatedBy: login.APIKeyAuthModule,
-			},
-			expectedError:  fmt.Errorf("invalid token"),
-			expectedKeyID:  -1,
-			expectedExists: false,
-		},
-	}
-
-	req := &authn.Request{HTTPRequest: &http.Request{
-		Header: map[string][]string{
-			"Authorization": {"Bearer " + secret},
-		},
-	}}
-
-	for _, tt := range tests {
-		t.Run(tt.desc, func(t *testing.T) {
-			c := ProvideAPIKey(&apikeytest.Service{
-				ExpectedError:  tt.expectedError,
-				ExpectedAPIKey: tt.expectedKey,
-			})
-			id, exists := c.getAPIKeyID(context.Background(), tt.expectedIdentity, req)
-			assert.Equal(t, tt.expectedExists, exists)
-			assert.Equal(t, tt.expectedKeyID, id)
-		})
-	}
-}
-
 func TestAPIKey_ResolveIdentity(t *testing.T) {
 	type testCase struct {
 		desc string
@@ -308,7 +205,7 @@ func TestAPIKey_ResolveIdentity(t *testing.T) {
 			desc:        "should return error for invalid type",
 			id:          "1",
 			typ:         claims.TypeUser,
-			expectedErr: identity.ErrInvalidTypedID,
+			expectedErr: errAPIKeyInvalidType,
 		},
 		{
 			desc: "should return error when api key has expired",
@@ -342,7 +239,7 @@ func TestAPIKey_ResolveIdentity(t *testing.T) {
 				OrgID:            1,
 				ServiceAccountId: intPtr(1),
 			},
-			expectedErr: identity.ErrInvalidTypedID,
+			expectedErr: errAPIKeyInvalidType,
 		},
 		{
 			desc: "should return error when api key is belongs to different org",

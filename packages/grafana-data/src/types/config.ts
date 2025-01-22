@@ -171,6 +171,8 @@ export interface GrafanaConfig {
   externalUserMngLinkUrl: string;
   externalUserMngLinkName: string;
   externalUserMngInfo: string;
+  externalUserMngAnalytics: boolean;
+  externalUserMngAnalyticsParams: string;
   allowOrgCreate: boolean;
   disableLoginForm: boolean;
   defaultDatasource: string;
@@ -209,7 +211,6 @@ export interface GrafanaConfig {
   http2Enabled: boolean;
   dateFormats?: SystemDateFormatSettings;
   grafanaJavascriptAgent: GrafanaJavascriptAgentConfig;
-  customTheme?: any;
   geomapDefaultBaseLayer?: MapLayerOptions;
   geomapDisableCustomBaseLayer?: boolean;
   unifiedAlertingEnabled: boolean;
@@ -227,6 +228,7 @@ export interface GrafanaConfig {
   rudderstackSdkUrl: string | undefined;
   rudderstackConfigUrl: string | undefined;
   rudderstackIntegrationsUrl: string | undefined;
+  analyticsConsoleReporting: boolean;
   sqlConnectionLimits: SqlConnectionLimits;
   sharedWithMeFolderUID?: string;
   rootFolderUID?: string;
@@ -279,5 +281,6 @@ export interface AuthSettings {
   GenericOAuthSkipOrgRoleSync?: boolean;
 
   disableLogin?: boolean;
+  passwordlessEnabled?: boolean;
   basicAuthStrongPasswordPolicy?: boolean;
 }

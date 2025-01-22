@@ -23,6 +23,7 @@ export interface NewThemeOptions {
 /** @internal */
 export function createTheme(options: NewThemeOptions = {}): GrafanaTheme2 {
   const {
+    name,
     colors: colorsInput = {},
     spacing: spacingInput = {},
     shape: shapeInput = {},

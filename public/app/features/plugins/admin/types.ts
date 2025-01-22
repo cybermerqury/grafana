@@ -43,6 +43,7 @@ export interface CatalogPlugin extends WithAccessControlMetadata {
   isPreinstalled: { found: boolean; withVersion: boolean }; // Indicates that the plugin is pre-installed
   // `isPublished` is TRUE if the plugin is published to grafana.com
   isPublished: boolean;
+  latestVersion?: string;
   name: string;
   orgName: string;
   signature: PluginSignatureStatus;
@@ -77,6 +78,7 @@ export interface CatalogPluginDetails {
   statusContext?: string;
   iam?: IdentityAccessManagement;
   changelog?: string;
+  lastCommitDate?: string;
 }
 
 export interface CatalogPluginInfo {
@@ -138,6 +140,7 @@ export type RemotePlugin = {
   versionSignedByOrgName: string;
   versionStatus: string;
   angularDetected?: boolean;
+  lastCommitDate?: string;
 };
 
 // The available status codes on GCOM are available here:
@@ -156,6 +159,7 @@ export type LocalPlugin = WithAccessControlMetadata & {
   dev?: boolean;
   enabled: boolean;
   hasUpdate: boolean;
+  latestVersion: string;
   id: string;
   info: {
     author: Rel;
@@ -212,6 +216,7 @@ export interface Version {
   createdAt: string;
   isCompatible: boolean;
   grafanaDependency: string | null;
+  angularDetected?: boolean;
 }
 
 export interface PluginDetails {
@@ -251,6 +256,8 @@ export enum PluginTabLabels {
   USAGE = 'Usage',
   IAM = 'IAM',
   CHANGELOG = 'Changelog',
+  PLUGINDETAILS = 'Plugin details',
+  DATASOURCE_CONNECTIONS = 'Data source connections',
 }
 
 export enum PluginTabIds {
@@ -261,6 +268,8 @@ export enum PluginTabIds {
   USAGE = 'usage',
   IAM = 'iam',
   CHANGELOG = 'changelog',
+  PLUGINDETAILS = 'right-panel',
+  DATASOURCE_CONNECTIONS = 'datasource-connections',
 }
 
 export enum RequestStatus {
@@ -315,6 +324,7 @@ export type PluginVersion = {
   links: Array<{ rel: string; href: string }>;
   isCompatible: boolean;
   grafanaDependency: string | null;
+  angularDetected?: boolean;
 };
 
 export type InstancePlugin = {

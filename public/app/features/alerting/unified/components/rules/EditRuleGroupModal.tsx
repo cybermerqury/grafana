@@ -6,6 +6,7 @@ import { FieldValues, FormProvider, RegisterOptions, useForm, useFormContext } f
 import { GrafanaTheme2 } from '@grafana/data';
 import { Alert, Badge, Button, Field, Input, Label, LinkButton, Modal, Stack, useStyles2 } from '@grafana/ui';
 import { useAppNotification } from 'app/core/copy/appNotification';
+import { Trans } from 'app/core/internationalization';
 import { dispatch } from 'app/store/store';
 import { CombinedRuleGroup, CombinedRuleNamespace, RuleGroupIdentifier } from 'app/types/unified-alerting';
 import { RulerRuleDTO } from 'app/types/unified-alerting-dto';
@@ -28,7 +29,6 @@ import { EvaluationIntervalLimitExceeded } from '../InvalidIntervalWarning';
 import { decodeGrafanaNamespace, encodeGrafanaNamespace } from '../expressions/util';
 import { EvaluationGroupQuickPick } from '../rule-editor/EvaluationGroupQuickPick';
 import { MIN_TIME_RANGE_STEP_S } from '../rule-editor/GrafanaEvaluationBehavior';
-import { checkForPathSeparator } from '../rule-editor/util';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -179,7 +179,7 @@ export interface ModalProps {
   hideFolder?: boolean;
 }
 
-export function EditCloudGroupModal(props: ModalProps): React.ReactElement {
+export function EditRuleGroupModal(props: ModalProps): React.ReactElement {
   const { namespace, group, onClose, intervalEditOnly, folderUid } = props;
 
   const styles = useStyles2(getStyles);
@@ -300,11 +300,6 @@ export function EditCloudGroupModal(props: ModalProps): React.ReactElement {
                     readOnly={intervalEditOnly || isGrafanaManagedGroup}
                     {...register('namespaceName', {
                       required: 'Namespace name is required.',
-                      validate: {
-                        // for Grafana-managed we do not validate the name of the folder because we use the UID anyway
-                        pathSeparator: (namespaceName) =>
-                          isGrafanaManagedGroup ? true : checkForPathSeparator(namespaceName),
-                      },
                     })}
                   />
                 </Field>
@@ -337,9 +332,6 @@ export function EditCloudGroupModal(props: ModalProps): React.ReactElement {
                 readOnly={intervalEditOnly}
                 {...register('groupName', {
                   required: 'Evaluation group name is required.',
-                  validate: {
-                    pathSeparator: (namespace) => checkForPathSeparator(namespace),
-                  },
                 })}
               />
             </Field>
@@ -393,7 +385,7 @@ export function EditCloudGroupModal(props: ModalProps): React.ReactElement {
                   onClick={() => onClose(false)}
                   fill="outline"
                 >
-                  Cancel
+                  <Trans i18nKey="alerting.common.cancel">Cancel</Trans>
                 </Button>
                 <Button type="submit" disabled={!isDirty || !isValid || loading}>
                   {loading ? 'Saving...' : 'Save'}

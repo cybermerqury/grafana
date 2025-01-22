@@ -2,49 +2,49 @@ package definitions
 
 // swagger:route GET /v1/provisioning/templates provisioning stable RouteGetTemplates
 //
-// Get all notification templates.
+// Get all notification template groups.
 //
 //     Responses:
 //       200: NotificationTemplates
 
 // swagger:route GET /v1/provisioning/templates/{name} provisioning stable RouteGetTemplate
 //
-// Get a notification template.
+// Get a notification template group.
 //
 //     Responses:
 //       200: NotificationTemplate
-//       404: GenericPublicError
+//       404: PublicError
 
 // swagger:route PUT /v1/provisioning/templates/{name} provisioning stable RoutePutTemplate
 //
-// Updates an existing notification template.
+// Updates an existing notification template group.
 //
 //     Consumes:
 //     - application/json
 //
 //     Responses:
 //       202: NotificationTemplate
-//       400: GenericPublicError
-//       409: GenericPublicError
+//       400: PublicError
+//       409: PublicError
 
 // swagger:route DELETE /v1/provisioning/templates/{name} provisioning stable RouteDeleteTemplate
 //
-// Delete a template.
+// Delete a notification template group.
 //
 //     Responses:
 //       204: description: The template was deleted successfully.
-//       409: GenericPublicError
+//       409: PublicError
 
 // swagger:parameters RouteGetTemplate RoutePutTemplate RouteDeleteTemplate
 type RouteGetTemplateParam struct {
-	// Template Name
+	// Template group name
 	// in:path
 	Name string `json:"name"`
 }
 
 // swagger:parameters stable RouteDeleteTemplate
 type RouteDeleteTemplateParam struct {
-	// Template name
+	// Template group name
 	// in:path
 	Name string `json:"name"`
 
@@ -55,6 +55,7 @@ type RouteDeleteTemplateParam struct {
 
 // swagger:model
 type NotificationTemplate struct {
+	UID             string     `json:"-" yaml:"-"`
 	Name            string     `json:"name"`
 	Template        string     `json:"template"`
 	Provenance      Provenance `json:"provenance,omitempty"`

@@ -150,7 +150,12 @@ func NewAlertmanager(cfg AlertmanagerConfig, store stateStore, decryptFn Decrypt
 		return c.Do(req.WithContext(ctx))
 	}
 	senderLogger := log.New("ngalert.sender.external-alertmanager")
-	s, err := sender.NewExternalAlertmanagerSender(senderLogger, prometheus.NewRegistry(), sender.WithDoFunc(doFunc))
+	s, err := sender.NewExternalAlertmanagerSender(
+		senderLogger,
+		prometheus.NewRegistry(),
+		sender.WithDoFunc(doFunc),
+		sender.WithUTF8Labels(),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +268,24 @@ func (am *Alertmanager) CompareAndSendConfiguration(ctx context.Context, config 
 	if !am.shouldSendConfig(ctx, decrypted) {
 		return nil
 	}
-	return am.sendConfiguration(ctx, decrypted, config.ConfigurationHash, config.CreatedAt, config.Default)
+
+	isDefault, err := am.isDefaultConfiguration(decrypted)
+	if err != nil {
+		return err
+	}
+
+	return am.sendConfiguration(ctx, decrypted, config.ConfigurationHash, config.CreatedAt, isDefault)
+}
+
+func (am *Alertmanager) isDefaultConfiguration(cfg *apimodels.PostableUserConfig) (bool, error) {
+	rawCfg, err := json.Marshal(cfg)
+	if err != nil {
+		return false, err
+	}
+
+	configHash := fmt.Sprintf("%x", md5.Sum(rawCfg))
+
+	return configHash == am.defaultConfigHash, nil
 }
 
 func (am *Alertmanager) decryptConfiguration(ctx context.Context, cfg *apimodels.PostableUserConfig) (*apimodels.PostableUserConfig, error) {
@@ -510,17 +532,26 @@ func (am *Alertmanager) GetReceivers(ctx context.Context) ([]apimodels.Receiver,
 }
 
 func (am *Alertmanager) TestReceivers(ctx context.Context, c apimodels.TestReceiversConfigBodyParams) (*alertingNotify.TestReceiversResult, int, error) {
+	fn := func(payload []byte) ([]byte, error) {
+		return am.decrypt(ctx, payload)
+	}
+
 	receivers := make([]*alertingNotify.APIReceiver, 0, len(c.Receivers))
 	for _, r := range c.Receivers {
 		integrations := make([]*alertingNotify.GrafanaIntegrationConfig, 0, len(r.GrafanaManagedReceivers))
 		for _, gr := range r.PostableGrafanaReceivers.GrafanaManagedReceivers {
+			decrypted, err := gr.DecryptSecureSettings(fn)
+			if err != nil {
+				return nil, 0, err
+			}
+
 			integrations = append(integrations, &alertingNotify.GrafanaIntegrationConfig{
 				UID:                   gr.UID,
 				Name:                  gr.Name,
 				Type:                  gr.Type,
 				DisableResolveMessage: gr.DisableResolveMessage,
 				Settings:              json.RawMessage(gr.Settings),
-				SecureSettings:        gr.SecureSettings,
+				SecureSettings:        decrypted,
 			})
 		}
 		receivers = append(receivers, &alertingNotify.APIReceiver{

@@ -1,14 +1,12 @@
 import { useMemo } from 'react';
 
 import { locationService } from '@grafana/runtime';
+import { useGrafanaContactPoints } from 'app/features/alerting/unified/components/contact-points/useContactPoints';
+import { useNotificationPolicyRoute } from 'app/features/alerting/unified/components/notification-policies/useNotificationPolicyRoute';
+import { GRAFANA_RULES_SOURCE_NAME } from 'app/features/alerting/unified/utils/datasource';
 import { RelativeUrl, createRelativeUrl } from 'app/features/alerting/unified/utils/url';
 
-import {
-  isOnCallContactPointReady,
-  useGetContactPoints,
-  useGetDefaultContactPoint,
-  useIsCreateAlertRuleDone,
-} from './alerting/hooks';
+import { isOnCallContactPointReady, useIsCreateAlertRuleDone } from './alerting/hooks';
 import { isContactPointReady } from './alerting/utils';
 import { ConfigurationStepsEnum, DataSourceConfigurationData, IrmCardConfiguration } from './components/ConfigureIRM';
 import { useGetIncidentPluginConfig } from './incidents/hooks';
@@ -53,8 +51,11 @@ export interface EssentialsConfigurationData {
 
 function useGetConfigurationForApps() {
   // configuration checks for alerting
-  const { contactPoints, isLoading: isLoadingContactPoints } = useGetContactPoints();
-  const { defaultContactpoint, isLoading: isLoadingDefaultContactPoint } = useGetDefaultContactPoint();
+  const { contactPoints, isLoading: isLoadingContactPoints } = useGrafanaContactPoints();
+  const { data: rootRoute, isLoading: isLoadingDefaultContactPoint } = useNotificationPolicyRoute({
+    alertmanager: GRAFANA_RULES_SOURCE_NAME,
+  });
+  const defaultContactpoint = rootRoute?.[0].receiver || '';
   const { isDone: isCreateAlertRuleDone, isLoading: isLoadingAlertCreatedDone } = useIsCreateAlertRuleDone();
   // configuration checks for incidents
   const {
@@ -127,13 +128,13 @@ export function useGetEssentialsConfiguration(): EssentialsConfigurationData {
         description: 'Configure Grafana Alerting',
         steps: [
           {
-            title: 'Update default email contact point',
-            description: 'Add a valid email to the default email contact point.',
+            title: 'Update default contact point',
+            description: 'Update the default contact point to a method other than the example email address.',
             button: {
               type: 'openLink',
               urlLink: {
-                url: `/alerting/notifications/receivers/${defaultContactpoint}/edit`,
-                queryParams: { alertmanager: 'grafana' },
+                url: `/alerting/notifications`,
+                queryParams: { search: defaultContactpoint, alertmanager: 'grafana' },
               },
               label: 'Edit',
               labelOnDone: 'View',

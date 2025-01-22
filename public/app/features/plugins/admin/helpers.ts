@@ -118,6 +118,9 @@ export function mapRemoteToCatalog(plugin: RemotePlugin, error?: PluginError): C
     status,
     angularDetected,
     keywords,
+    signatureType,
+    versionSignatureType,
+    versionSignedByOrgName,
   } = plugin;
 
   const isDisabled = !!error || isDisabledSecretsPlugin(typeCode);
@@ -137,6 +140,8 @@ export function mapRemoteToCatalog(plugin: RemotePlugin, error?: PluginError): C
     popularity,
     publishedAt,
     signature: getPluginSignature({ remote: plugin, error }),
+    signatureType: signatureType || versionSignatureType || undefined,
+    signatureOrg: versionSignedByOrgName,
     updatedAt,
     hasUpdate: false,
     isPublished: true,
@@ -152,6 +157,7 @@ export function mapRemoteToCatalog(plugin: RemotePlugin, error?: PluginError): C
     error: error?.errorCode,
     angularDetected,
     isFullyInstalled: isDisabled,
+    latestVersion: plugin.version,
   };
 }
 
@@ -201,6 +207,7 @@ export function mapLocalToCatalog(plugin: LocalPlugin, error?: PluginError): Cat
     angularDetected,
     isFullyInstalled: true,
     iam: plugin.iam,
+    latestVersion: plugin.latestVersion,
   };
 }
 
@@ -263,6 +270,7 @@ export function mapToCatalogPlugin(local?: LocalPlugin, remote?: RemotePlugin, e
     angularDetected: local?.angularDetected ?? remote?.angularDetected,
     isFullyInstalled: Boolean(local) || isDisabled,
     iam: local?.iam,
+    latestVersion: local?.latestVersion || remote?.version || '',
   };
 }
 
@@ -421,4 +429,51 @@ export function filterByKeyword(plugins: CatalogPlugin[], query: string) {
     return null;
   }
   return idxs.map((id) => getId(dataArray[id]));
+}
+
+function isPluginModifiable(plugin: CatalogPlugin) {
+  if (
+    plugin.isProvisioned || //provisioned plugins cannot be modified
+    plugin.isCore || //core plugins cannot be modified
+    plugin.type === PluginType.renderer || // currently renderer plugins are not supported by the catalog due to complications related to installation / update / uninstall
+    plugin.isPreinstalled.withVersion || // Preinstalled plugins (with specified version) cannot be modified
+    plugin.isManaged // Managed plugins cannot be modified
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+export function isPluginUpdatable(plugin: CatalogPlugin) {
+  if (!isPluginModifiable(plugin)) {
+    return false;
+  }
+
+  // If there is no update available, the plugin cannot be updated
+  if (!plugin.hasUpdate) {
+    return false;
+  }
+
+  // If the plugin is currently being updated, it should not be updated
+  if (plugin.isUpdatingFromInstance) {
+    return false;
+  }
+
+  return true;
+}
+
+export function shouldDisablePluginInstall(plugin: CatalogPlugin) {
+  if (
+    !isPluginModifiable(plugin) ||
+    plugin.type === PluginType.secretsmanager ||
+    (plugin.isEnterprise && !featureEnabled('enterprise.plugins')) ||
+    !plugin.isPublished ||
+    plugin.isDisabled ||
+    !isInstallControlsEnabled()
+  ) {
+    return true;
+  }
+
+  return false;
 }

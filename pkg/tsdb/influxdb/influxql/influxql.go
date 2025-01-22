@@ -49,7 +49,7 @@ func Query(ctx context.Context, tracer trace.Tracer, dsInfo *models.DatasourceIn
 		responseLock := sync.Mutex{}
 		err = concurrency.ForEachJob(ctx, len(req.Queries), concurrentQueryCount, func(ctx context.Context, idx int) error {
 			reqQuery := req.Queries[idx]
-			query, err := models.QueryParse(reqQuery)
+			query, err := models.QueryParse(reqQuery, logger)
 			if err != nil {
 				return err
 			}
@@ -88,7 +88,7 @@ func Query(ctx context.Context, tracer trace.Tracer, dsInfo *models.DatasourceIn
 		}
 	} else {
 		for _, reqQuery := range req.Queries {
-			query, err := models.QueryParse(reqQuery)
+			query, err := models.QueryParse(reqQuery, logger)
 			if err != nil {
 				return &backend.QueryDataResponse{}, err
 			}
@@ -194,7 +194,7 @@ func execute(ctx context.Context, tracer trace.Tracer, dsInfo *models.Datasource
 		resp = buffered.ResponseParse(res.Body, res.StatusCode, query)
 	}
 
-	if resp.Frames != nil && len(resp.Frames) > 0 {
+	if len(resp.Frames) > 0 {
 		resp.Frames[0].Meta.Custom = readCustomMetadata(res)
 	}
 

@@ -7,6 +7,7 @@ import { selectors } from '@grafana/e2e-selectors';
 import { config, locationService } from '@grafana/runtime';
 import { Themeable2, withTheme2 } from '@grafana/ui';
 import { notifyApp } from 'app/core/actions';
+import { ScrollRefElement } from 'app/core/components/NativeScrollbar';
 import { Page } from 'app/core/components/Page/Page';
 import { EntityNotFound } from 'app/core/components/PageNotFound/EntityNotFound';
 import { GrafanaContext, GrafanaContextType } from 'app/core/context/GrafanaContext';
@@ -15,17 +16,15 @@ import { getKioskMode } from 'app/core/navigation/kiosk';
 import { GrafanaRouteComponentProps } from 'app/core/navigation/types';
 import { ID_PREFIX } from 'app/core/reducers/navBarTree';
 import { getNavModel } from 'app/core/selectors/navModel';
-import { PanelModel } from 'app/features/dashboard/state';
+import { PanelModel } from 'app/features/dashboard/state/PanelModel';
 import { dashboardWatcher } from 'app/features/live/dashboard/dashboardWatcher';
 import { AngularDeprecationNotice } from 'app/features/plugins/angularDeprecation/AngularDeprecationNotice';
 import { AngularMigrationNotice } from 'app/features/plugins/angularDeprecation/AngularMigrationNotice';
-import { getPageNavFromSlug, getRootContentNavModel } from 'app/features/storage/StorageFolderPage';
-import { DashboardRoutes, KioskMode, StoreState } from 'app/types';
+import { KioskMode, StoreState } from 'app/types';
 import { PanelEditEnteredEvent, PanelEditExitedEvent } from 'app/types/events';
 
 import { cancelVariables, templateVarsChangedInUrl } from '../../variables/state/actions';
 import { findTemplateVarChanges } from '../../variables/utils';
-import { AddWidgetModal } from '../components/AddWidgetModal/AddWidgetModal';
 import { DashNav } from '../components/DashNav';
 import { DashboardFailed } from '../components/DashboardLoading/DashboardFailed';
 import { DashboardLoading } from '../components/DashboardLoading/DashboardLoading';
@@ -33,7 +32,7 @@ import { DashboardPrompt } from '../components/DashboardPrompt/DashboardPrompt';
 import { DashboardSettings } from '../components/DashboardSettings';
 import { PanelInspector } from '../components/Inspector/PanelInspector';
 import { PanelEditor } from '../components/PanelEditor/PanelEditor';
-import { ShareModal } from '../components/ShareModal';
+import { ShareModal } from '../components/ShareModal/ShareModal';
 import { SubMenu } from '../components/SubMenu/SubMenu';
 import { DashboardGrid } from '../dashgrid/DashboardGrid';
 import { liveTimer } from '../dashgrid/liveTimer';
@@ -64,9 +63,11 @@ const mapDispatchToProps = {
 
 const connector = connect(mapStateToProps, mapDispatchToProps);
 
+export type DashboardPageParams = { slug: string; uid: string; type: string; accessToken: string };
 export type Props = Themeable2 &
-  GrafanaRouteComponentProps<DashboardPageRouteParams, DashboardPageRouteSearchParams> &
-  ConnectedProps<typeof connector>;
+  Omit<GrafanaRouteComponentProps<DashboardPageRouteParams, DashboardPageRouteSearchParams>, 'match'> &
+  // The params returned from useParams are all optional, so we need to match that type here
+  ConnectedProps<typeof connector> & { params: Partial<DashboardPageParams> };
 
 export interface State {
   editPanel: PanelModel | null;
@@ -77,7 +78,7 @@ export interface State {
   showLoadingState: boolean;
   panelNotFound: boolean;
   editPanelAccessDenied: boolean;
-  scrollElement?: HTMLDivElement;
+  scrollElement?: ScrollRefElement;
   pageNav?: NavModelItem;
   sectionNav?: NavModel;
 }
@@ -136,7 +137,7 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
 
   componentDidMount() {
     this.initDashboard();
-    this.forceRouteReloadCounter = (this.props.history.location.state as any)?.routeReloadCounter || 0;
+    this.forceRouteReloadCounter = (this.props.location.state as any)?.routeReloadCounter || 0;
   }
 
   componentWillUnmount() {
@@ -149,21 +150,21 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
   }
 
   initDashboard() {
-    const { dashboard, match, queryParams } = this.props;
+    const { dashboard, params, queryParams } = this.props;
 
     if (dashboard) {
       this.closeDashboard();
     }
 
     this.props.initDashboard({
-      urlSlug: match.params.slug,
-      urlUid: match.params.uid,
-      urlType: match.params.type,
+      urlSlug: params.slug,
+      urlUid: params.uid,
+      urlType: params.type,
       urlFolderUid: queryParams.folderUid,
       panelType: queryParams.panelType,
       routeName: this.props.route.routeName,
       fixUrl: true,
-      accessToken: match.params.accessToken,
+      accessToken: params.accessToken,
       keybindingSrv: this.context.keybindings,
     });
 
@@ -172,15 +173,15 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
-    const { dashboard, match, templateVarsChangedInUrl } = this.props;
-    const routeReloadCounter = (this.props.history.location.state as any)?.routeReloadCounter;
+    const { dashboard, params, templateVarsChangedInUrl } = this.props;
+    const routeReloadCounter = (this.props.location.state as any)?.routeReloadCounter;
 
     if (!dashboard) {
       return;
     }
 
     if (
-      prevProps.match.params.uid !== match.params.uid ||
+      prevProps.params.uid !== params.uid ||
       (routeReloadCounter !== undefined && this.forceRouteReloadCounter !== routeReloadCounter)
     ) {
       this.initDashboard();
@@ -234,11 +235,9 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
       locationService.partial({ editPanel: null, viewPanel: null });
     }
 
-    if (config.featureToggles.bodyScrolling) {
-      // Update window scroll position
-      if (this.state.updateScrollTop !== undefined && this.state.updateScrollTop !== prevState.updateScrollTop) {
-        window.scrollTo(0, this.state.updateScrollTop);
-      }
+    // Update window scroll position
+    if (this.state.updateScrollTop !== undefined && this.state.updateScrollTop !== prevState.updateScrollTop) {
+      this.state.scrollElement?.scrollTo(0, this.state.updateScrollTop);
     }
   }
 
@@ -263,19 +262,17 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
 
     const updatedState = { ...state };
 
-    if (config.featureToggles.bodyScrolling) {
-      // Entering settings view
-      if (!state.editView && urlEditView) {
-        updatedState.editView = urlEditView;
-        updatedState.rememberScrollTop = window.scrollY;
-        updatedState.updateScrollTop = 0;
-      }
+    // Entering settings view
+    if (!state.editView && urlEditView) {
+      updatedState.editView = urlEditView;
+      updatedState.rememberScrollTop = state.scrollElement?.scrollTop;
+      updatedState.updateScrollTop = 0;
+    }
 
-      // Leaving settings view
-      else if (state.editView && !urlEditView) {
-        updatedState.updateScrollTop = state.rememberScrollTop;
-        updatedState.editView = null;
-      }
+    // Leaving settings view
+    else if (state.editView && !urlEditView) {
+      updatedState.updateScrollTop = state.rememberScrollTop;
+      updatedState.editView = null;
     }
 
     // Entering edit mode
@@ -284,12 +281,7 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
       if (panel) {
         if (dashboard.canEditPanel(panel)) {
           updatedState.editPanel = panel;
-          updatedState.rememberScrollTop = config.featureToggles.bodyScrolling
-            ? window.scrollY
-            : state.scrollElement?.scrollTop;
-          if (config.featureToggles.bodyScrolling) {
-            updatedState.updateScrollTop = 0;
-          }
+          updatedState.rememberScrollTop = state.scrollElement?.scrollTop;
         } else {
           updatedState.editPanelAccessDenied = true;
         }
@@ -311,9 +303,7 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
         // Should move this state out of dashboard in the future
         dashboard.initViewPanel(panel);
         updatedState.viewPanel = panel;
-        updatedState.rememberScrollTop = config.featureToggles.bodyScrolling
-          ? window.scrollY
-          : state.scrollElement?.scrollTop;
+        updatedState.rememberScrollTop = state.scrollElement?.scrollTop;
         updatedState.updateScrollTop = 0;
       } else {
         updatedState.panelNotFound = true;
@@ -337,7 +327,7 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
     return updateStatePageNavFromProps(props, updatedState);
   }
 
-  setScrollRef = (scrollElement: HTMLDivElement): void => {
+  setScrollRef = (scrollElement: ScrollRefElement): void => {
     this.setState({ scrollElement });
   };
 
@@ -366,7 +356,7 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
 
   render() {
     const { dashboard, initError, queryParams, theme } = this.props;
-    const { editPanel, viewPanel, updateScrollTop, pageNav, sectionNav } = this.state;
+    const { editPanel, viewPanel, pageNav, sectionNav } = this.state;
     const kioskMode = getKioskMode(this.props.queryParams);
     const styles = getStyles(theme);
 
@@ -443,8 +433,7 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
           pageNav={pageNav}
           layout={PageLayoutType.Canvas}
           className={pageClassName}
-          scrollRef={this.setScrollRef}
-          scrollTop={updateScrollTop}
+          onSetScrollRef={this.setScrollRef}
         >
           {showToolbar && (
             <header data-testid={selectors.pages.Dashboard.DashNav.navV2}>
@@ -503,7 +492,6 @@ export class UnthemedDashboardPage extends PureComponent<Props, State> {
             sectionNav={sectionNav}
           />
         )}
-        {queryParams.addWidget && config.featureToggles.vizAndWidgetSplit && <AddWidgetModal />}
       </>
     );
   }
@@ -522,7 +510,7 @@ function updateStatePageNavFromProps(props: Props, state: State): State {
   if (!pageNav || dashboard.title !== pageNav.text || dashboard.meta.folderUrl !== pageNav.parentItem?.url) {
     pageNav = {
       text: dashboard.title,
-      url: locationUtil.getUrlForPartial(props.history.location, {
+      url: locationUtil.getUrlForPartial(props.location, {
         editview: null,
         editPanel: null,
         viewPanel: null,
@@ -530,19 +518,7 @@ function updateStatePageNavFromProps(props: Props, state: State): State {
     };
   }
 
-  if (props.route.routeName === DashboardRoutes.Path) {
-    sectionNav = getRootContentNavModel();
-    const pageNav = getPageNavFromSlug(props.match.params.slug!);
-    if (pageNav?.parentItem) {
-      pageNav.parentItem = pageNav.parentItem;
-    }
-  } else {
-    sectionNav = getNavModel(
-      props.navIndex,
-      ID_PREFIX + dashboard.uid,
-      getNavModel(props.navIndex, 'dashboards/browse')
-    );
-  }
+  sectionNav = getNavModel(props.navIndex, ID_PREFIX + dashboard.uid, getNavModel(props.navIndex, 'dashboards/browse'));
 
   const { folderUid } = dashboard.meta;
   if (folderUid && pageNav && sectionNav.main.id !== 'starred') {

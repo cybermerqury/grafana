@@ -1,4 +1,5 @@
 import { AnnotationChangeEvent, AnnotationEventUIModel, CoreApp, DataFrame } from '@grafana/data';
+import { config, getDataSourceSrv } from '@grafana/runtime';
 import { AdHocFiltersVariable, dataLayers, sceneGraph, sceneUtils, VizPanel } from '@grafana/scenes';
 import { DataSourceRef } from '@grafana/schema';
 import { AdHocFilterItem, PanelContext } from '@grafana/ui';
@@ -160,7 +161,9 @@ export function getAdHocFilterVariableFor(scene: DashboardScene, ds: DataSourceR
   const newVariable = new AdHocFiltersVariable({
     name: 'Filters',
     datasource: ds,
+    supportsMultiValueOperators: Boolean(getDataSourceSrv().getInstanceSettings(ds)?.meta.multiValueFilterOperators),
     useQueriesAsFilterForOptions: true,
+    layout: config.featureToggles.newFiltersUI ? 'combobox' : undefined,
   });
 
   // Add it to the scene
@@ -172,23 +175,23 @@ export function getAdHocFilterVariableFor(scene: DashboardScene, ds: DataSourceR
 }
 
 function updateAdHocFilterVariable(filterVar: AdHocFiltersVariable, newFilter: AdHocFilterItem) {
-  // Check if we need to update an existing filter
-  for (const filter of filterVar.state.filters) {
-    if (filter.key === newFilter.key) {
-      filterVar.setState({
-        filters: filterVar.state.filters.map((f) => {
-          if (f.key === newFilter.key) {
-            return newFilter;
-          }
-          return f;
-        }),
-      });
-      return;
-    }
+  // This function handles 'Filter for value' and 'Filter out value' from table cell
+  // We are allowing to add filters with the same key because elastic search ds supports that
+
+  // Update is only required when we change operator and keep key and value the same
+  //   key1 = value1 -> key1 != value1
+  const filterToReplaceIndex = filterVar.state.filters.findIndex(
+    (filter) =>
+      filter.key === newFilter.key && filter.value === newFilter.value && filter.operator !== newFilter.operator
+  );
+
+  if (filterToReplaceIndex >= 0) {
+    const updatedFilters = filterVar.state.filters.slice();
+    updatedFilters.splice(filterToReplaceIndex, 1, newFilter);
+    filterVar.updateFilters(updatedFilters);
+    return;
   }
 
   // Add new filter
-  filterVar.setState({
-    filters: [...filterVar.state.filters, newFilter],
-  });
+  filterVar.updateFilters([...filterVar.state.filters, newFilter]);
 }

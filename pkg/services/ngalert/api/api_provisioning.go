@@ -38,22 +38,22 @@ type ProvisioningSrv struct {
 
 type ContactPointService interface {
 	GetContactPoints(ctx context.Context, q provisioning.ContactPointQuery, user identity.Requester) ([]definitions.EmbeddedContactPoint, error)
-	CreateContactPoint(ctx context.Context, orgID int64, contactPoint definitions.EmbeddedContactPoint, p alerting_models.Provenance) (definitions.EmbeddedContactPoint, error)
+	CreateContactPoint(ctx context.Context, orgID int64, user identity.Requester, contactPoint definitions.EmbeddedContactPoint, p alerting_models.Provenance) (definitions.EmbeddedContactPoint, error)
 	UpdateContactPoint(ctx context.Context, orgID int64, contactPoint definitions.EmbeddedContactPoint, p alerting_models.Provenance) error
 	DeleteContactPoint(ctx context.Context, orgID int64, uid string) error
 }
 
 type TemplateService interface {
 	GetTemplates(ctx context.Context, orgID int64) ([]definitions.NotificationTemplate, error)
-	GetTemplate(ctx context.Context, orgID int64, name string) (definitions.NotificationTemplate, error)
+	GetTemplate(ctx context.Context, orgID int64, nameOrUid string) (definitions.NotificationTemplate, error)
 	UpsertTemplate(ctx context.Context, orgID int64, tmpl definitions.NotificationTemplate) (definitions.NotificationTemplate, error)
-	DeleteTemplate(ctx context.Context, orgID int64, name string, provenance definitions.Provenance, version string) error
+	DeleteTemplate(ctx context.Context, orgID int64, nameOrUid string, provenance definitions.Provenance, version string) error
 }
 
 type NotificationPolicyService interface {
-	GetPolicyTree(ctx context.Context, orgID int64) (definitions.Route, error)
-	UpdatePolicyTree(ctx context.Context, orgID int64, tree definitions.Route, p alerting_models.Provenance) error
-	ResetPolicyTree(ctx context.Context, orgID int64) (definitions.Route, error)
+	GetPolicyTree(ctx context.Context, orgID int64) (definitions.Route, string, error)
+	UpdatePolicyTree(ctx context.Context, orgID int64, tree definitions.Route, p alerting_models.Provenance, version string) (definitions.Route, string, error)
+	ResetPolicyTree(ctx context.Context, orgID int64, provenance alerting_models.Provenance) (definitions.Route, error)
 }
 
 type MuteTimingService interface {
@@ -79,19 +79,19 @@ type AlertRuleService interface {
 }
 
 func (srv *ProvisioningSrv) RouteGetPolicyTree(c *contextmodel.ReqContext) response.Response {
-	policies, err := srv.policies.GetPolicyTree(c.Req.Context(), c.SignedInUser.GetOrgID())
+	policies, _, err := srv.policies.GetPolicyTree(c.Req.Context(), c.SignedInUser.GetOrgID())
 	if errors.Is(err, store.ErrNoAlertmanagerConfiguration) {
 		return ErrResp(http.StatusNotFound, err, "")
 	}
 	if err != nil {
-		return ErrResp(http.StatusInternalServerError, err, "")
+		return response.ErrOrFallback(http.StatusInternalServerError, "failed to get notification policy tree", err)
 	}
 
 	return response.JSON(http.StatusOK, policies)
 }
 
 func (srv *ProvisioningSrv) RouteGetPolicyTreeExport(c *contextmodel.ReqContext) response.Response {
-	policies, err := srv.policies.GetPolicyTree(c.Req.Context(), c.SignedInUser.GetOrgID())
+	policies, _, err := srv.policies.GetPolicyTree(c.Req.Context(), c.SignedInUser.GetOrgID())
 	if err != nil {
 		if errors.Is(err, store.ErrNoAlertmanagerConfiguration) {
 			return ErrResp(http.StatusNotFound, err, "")
@@ -109,7 +109,7 @@ func (srv *ProvisioningSrv) RouteGetPolicyTreeExport(c *contextmodel.ReqContext)
 
 func (srv *ProvisioningSrv) RoutePutPolicyTree(c *contextmodel.ReqContext, tree definitions.Route) response.Response {
 	provenance := determineProvenance(c)
-	err := srv.policies.UpdatePolicyTree(c.Req.Context(), c.SignedInUser.GetOrgID(), tree, alerting_models.Provenance(provenance))
+	_, _, err := srv.policies.UpdatePolicyTree(c.Req.Context(), c.SignedInUser.GetOrgID(), tree, alerting_models.Provenance(provenance), "")
 	if errors.Is(err, store.ErrNoAlertmanagerConfiguration) {
 		return ErrResp(http.StatusNotFound, err, "")
 	}
@@ -117,16 +117,17 @@ func (srv *ProvisioningSrv) RoutePutPolicyTree(c *contextmodel.ReqContext, tree 
 		return ErrResp(http.StatusBadRequest, err, "")
 	}
 	if err != nil {
-		return ErrResp(http.StatusInternalServerError, err, "")
+		return response.ErrOrFallback(http.StatusInternalServerError, "failed to update notification policy tree", err)
 	}
 
 	return response.JSON(http.StatusAccepted, util.DynMap{"message": "policies updated"})
 }
 
 func (srv *ProvisioningSrv) RouteResetPolicyTree(c *contextmodel.ReqContext) response.Response {
-	tree, err := srv.policies.ResetPolicyTree(c.Req.Context(), c.SignedInUser.GetOrgID())
+	provenance := determineProvenance(c)
+	tree, err := srv.policies.ResetPolicyTree(c.Req.Context(), c.SignedInUser.GetOrgID(), alerting_models.Provenance(provenance))
 	if err != nil {
-		return ErrResp(http.StatusInternalServerError, err, "")
+		return response.ErrOrFallback(http.StatusInternalServerError, "failed to reset notification policy tree", err)
 	}
 	return response.JSON(http.StatusAccepted, tree)
 }
@@ -165,12 +166,12 @@ func (srv *ProvisioningSrv) RouteGetContactPointsExport(c *contextmodel.ReqConte
 
 func (srv *ProvisioningSrv) RoutePostContactPoint(c *contextmodel.ReqContext, cp definitions.EmbeddedContactPoint) response.Response {
 	provenance := determineProvenance(c)
-	contactPoint, err := srv.contactPointService.CreateContactPoint(c.Req.Context(), c.SignedInUser.GetOrgID(), cp, alerting_models.Provenance(provenance))
+	contactPoint, err := srv.contactPointService.CreateContactPoint(c.Req.Context(), c.SignedInUser.GetOrgID(), c.SignedInUser, cp, alerting_models.Provenance(provenance))
 	if errors.Is(err, provisioning.ErrValidation) {
 		return ErrResp(http.StatusBadRequest, err, "")
 	}
 	if err != nil {
-		return ErrResp(http.StatusInternalServerError, err, "")
+		return response.ErrOrFallback(http.StatusInternalServerError, "", err)
 	}
 	return response.JSON(http.StatusAccepted, contactPoint)
 }
@@ -229,9 +230,9 @@ func (srv *ProvisioningSrv) RoutePutTemplate(c *contextmodel.ReqContext, body de
 	return response.JSON(http.StatusAccepted, modified)
 }
 
-func (srv *ProvisioningSrv) RouteDeleteTemplate(c *contextmodel.ReqContext, name string) response.Response {
+func (srv *ProvisioningSrv) RouteDeleteTemplate(c *contextmodel.ReqContext, nameOrUid string) response.Response {
 	version := c.Query("version")
-	err := srv.templates.DeleteTemplate(c.Req.Context(), c.SignedInUser.GetOrgID(), name, determineProvenance(c), version)
+	err := srv.templates.DeleteTemplate(c.Req.Context(), c.SignedInUser.GetOrgID(), nameOrUid, determineProvenance(c), version)
 	if err != nil {
 		return response.ErrOrFallback(http.StatusInternalServerError, "", err)
 	}
@@ -380,6 +381,11 @@ func (srv *ProvisioningSrv) RoutePutAlertRule(c *contextmodel.ReqContext, ar def
 			fmt.Errorf("%w: recording rules cannot be created on this instance", alerting_models.ErrAlertRuleFailedValidation),
 			"",
 		)
+	}
+
+	if UID == "" {
+		// If there is no UID, return 404 as the UID is part of the URL.
+		return response.Empty(http.StatusNotFound)
 	}
 
 	updated.OrgID = c.SignedInUser.GetOrgID()
@@ -566,6 +572,7 @@ func exportResponse(c *contextmodel.ReqContext, body definitions.AlertingFileExp
 		return exportHcl(params.Download, body)
 	}
 
+	body = escapeAlertingFileExport(body)
 	if params.Download {
 		r := response.JSONDownload
 		if params.Format == "yaml" {
@@ -579,6 +586,65 @@ func exportResponse(c *contextmodel.ReqContext, body definitions.AlertingFileExp
 		r = response.YAML
 	}
 	return r(http.StatusOK, body)
+}
+
+// escape all strings except:
+// Alert rule annotations: groups[].rules[].annotations
+// Alert rule time range: groups[].rules[].relativeTimeRange
+// Alert rule query model: groups[].rules[].data.model
+// Mute timings name: muteTimes[].name
+// Mute timings time intervals: muteTimes[].time_intervals[]
+// Notification template name: templates[].name
+// Notification template content: templates[].template
+func escapeAlertingFileExport(body definitions.AlertingFileExport) definitions.AlertingFileExport {
+	for i, group := range body.Groups {
+		body.Groups[i] = escapeRuleGroup(group)
+	}
+	// TODO: implement escaping for the other export fields
+	return body
+}
+
+// escape all strings except:
+// Alert rule annotations: groups[].rules[].annotations
+// Alert rule time range: groups[].rules[].relativeTimeRange
+// Alert rule query model: groups[].rules[].data.model
+func escapeRuleGroup(group definitions.AlertRuleGroupExport) definitions.AlertRuleGroupExport {
+	group.Name = addEscapeCharactersToString(group.Name)
+	group.Folder = addEscapeCharactersToString(group.Folder)
+	for i, rule := range group.Rules {
+		group.Rules[i].Title = addEscapeCharactersToString(rule.Title)
+		if rule.Labels != nil {
+			group.Rules[i].Labels = escapeMapValues(*rule.Labels)
+		}
+		if rule.NotificationSettings != nil {
+			notificationSettings := escapeRuleNotificationSettings(*rule.NotificationSettings)
+			group.Rules[i].NotificationSettings = &notificationSettings
+		}
+	}
+	return group
+}
+
+func escapeRuleNotificationSettings(ns definitions.AlertRuleNotificationSettingsExport) definitions.AlertRuleNotificationSettingsExport {
+	ns.Receiver = addEscapeCharactersToString(ns.Receiver)
+	for j := range ns.GroupBy {
+		ns.GroupBy[j] = addEscapeCharactersToString(ns.GroupBy[j])
+	}
+	for k := range ns.MuteTimeIntervals {
+		ns.MuteTimeIntervals[k] = addEscapeCharactersToString(ns.MuteTimeIntervals[k])
+	}
+	return ns
+}
+
+func escapeMapValues(m map[string]string) *map[string]string {
+	escapedMap := make(map[string]string, len(m))
+	for k, v := range m {
+		escapedMap[k] = addEscapeCharactersToString(v)
+	}
+	return &escapedMap
+}
+
+func addEscapeCharactersToString(s string) string {
+	return strings.ReplaceAll(s, "$", "$$")
 }
 
 func exportHcl(download bool, body definitions.AlertingFileExport) response.Response {
@@ -608,6 +674,10 @@ func exportHcl(download bool, body definitions.AlertingFileExport) response.Resp
 
 		for idx, cp := range body.Policies {
 			policy := cp.RouteExport
+			if policy.GroupByStr == nil {
+				// required field, must be set to empty array
+				policy.GroupByStr = &[]string{}
+			}
 			resources = append(resources, hcl.Resource{
 				Type: "grafana_notification_policy",
 				Name: fmt.Sprintf("notification_policy_%d", idx+1),

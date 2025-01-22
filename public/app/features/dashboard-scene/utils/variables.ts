@@ -1,5 +1,5 @@
 import { TypedVariableModel } from '@grafana/data';
-import { config } from '@grafana/runtime';
+import { config, getDataSourceSrv } from '@grafana/runtime';
 import {
   AdHocFiltersVariable,
   ConstantVariable,
@@ -12,11 +12,13 @@ import {
   SceneVariableSet,
   TextBoxVariable,
 } from '@grafana/scenes';
-import { DashboardModel } from 'app/features/dashboard/state';
+import { DashboardModel } from 'app/features/dashboard/state/DashboardModel';
 
 import { SnapshotVariable } from '../serialization/custom-variables/SnapshotVariable';
 
 import { getCurrentValueForOldIntervalModel, getIntervalsFromQueryString } from './utils';
+
+const DEFAULT_DATASOURCE = 'default';
 
 export function createVariablesForDashboard(oldModel: DashboardModel) {
   const variableObjects = oldModel.templating.list
@@ -56,6 +58,10 @@ export function createVariablesForSnapshot(oldModel: DashboardModel) {
             baseFilters: v.baseFilters ?? [],
             defaultKeys: v.defaultKeys,
             useQueriesAsFilterForOptions: true,
+            layout: config.featureToggles.newFiltersUI ? 'combobox' : undefined,
+            supportsMultiValueOperators: Boolean(
+              getDataSourceSrv().getInstanceSettings(v.datasource)?.meta.multiValueFilterOperators
+            ),
           });
         }
         // for other variable types we are using the SnapshotVariable
@@ -132,7 +138,12 @@ export function createSceneVariableFromVariableModel(variable: TypedVariableMode
       filters: variable.filters ?? [],
       baseFilters: variable.baseFilters ?? [],
       defaultKeys: variable.defaultKeys,
+      allowCustomValue: variable.allowCustomValue,
       useQueriesAsFilterForOptions: true,
+      layout: config.featureToggles.newFiltersUI ? 'combobox' : undefined,
+      supportsMultiValueOperators: Boolean(
+        getDataSourceSrv().getInstanceSettings(variable.datasource)?.meta.multiValueFilterOperators
+      ),
     });
   }
   if (variable.type === 'custom') {
@@ -148,6 +159,7 @@ export function createSceneVariableFromVariableModel(variable: TypedVariableMode
       defaultToAll: Boolean(variable.includeAll),
       skipUrlSync: variable.skipUrlSync,
       hide: variable.hide,
+      allowCustomValue: variable.allowCustomValue,
     });
   } else if (variable.type === 'query') {
     return new QueryVariable({
@@ -167,6 +179,7 @@ export function createSceneVariableFromVariableModel(variable: TypedVariableMode
       skipUrlSync: variable.skipUrlSync,
       hide: variable.hide,
       definition: variable.definition,
+      allowCustomValue: variable.allowCustomValue,
     });
   } else if (variable.type === 'datasource') {
     return new DataSourceVariable({
@@ -181,6 +194,8 @@ export function createSceneVariableFromVariableModel(variable: TypedVariableMode
       skipUrlSync: variable.skipUrlSync,
       isMulti: variable.multi,
       hide: variable.hide,
+      defaultOptionEnabled: variable.current?.value === DEFAULT_DATASOURCE && variable.current?.text === 'default',
+      allowCustomValue: variable.allowCustomValue,
     });
   } else if (variable.type === 'interval') {
     const intervals = getIntervalsFromQueryString(variable.query);
@@ -231,6 +246,7 @@ export function createSceneVariableFromVariableModel(variable: TypedVariableMode
       hide: variable.hide,
       // @ts-expect-error
       defaultOptions: variable.options,
+      allowCustomValue: variable.allowCustomValue,
     });
   } else {
     throw new Error(`Scenes: Unsupported variable type ${variable.type}`);

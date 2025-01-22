@@ -39,10 +39,12 @@ type IndexViewData struct {
 type EntryPointAssets struct {
 	ContentDeliveryURL string            `json:"cdn,omitempty"`
 	JSFiles            []EntryPointAsset `json:"jsFiles"`
+	CSSFiles           []EntryPointAsset `json:"cssFiles"`
 	Dark               string            `json:"dark"`
 	Merqury              string            `json:"merqury"`
 	Light              string            `json:"light"`
 	Swagger            []EntryPointAsset `json:"swagger"`
+	SwaggerCSSFiles    []EntryPointAsset `json:"swaggerCssFiles"`
 }
 
 type EntryPointAsset struct {
@@ -61,7 +63,13 @@ func (a *EntryPointAssets) SetContentDeliveryURL(prefix string) {
 	for i, p := range a.JSFiles {
 		a.JSFiles[i].FilePath = prefix + p.FilePath
 	}
+	for i, p := range a.CSSFiles {
+		a.CSSFiles[i].FilePath = prefix + p.FilePath
+	}
 	for i, p := range a.Swagger {
 		a.Swagger[i].FilePath = prefix + p.FilePath
+	}
+	for i, p := range a.SwaggerCSSFiles {
+		a.SwaggerCSSFiles[i].FilePath = prefix + p.FilePath
 	}
 }

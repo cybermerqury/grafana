@@ -20,17 +20,19 @@ import {
   RowPanel,
   VariableType,
 } from '@grafana/schema';
-import { DashboardModel, PanelModel } from 'app/features/dashboard/state';
+import { contextSrv } from 'app/core/core';
+import { DashboardModel } from 'app/features/dashboard/state/DashboardModel';
+import { PanelModel } from 'app/features/dashboard/state/PanelModel';
 import { createPanelSaveModel } from 'app/features/dashboard/state/__fixtures__/dashboardFixtures';
-import { SHARED_DASHBOARD_QUERY } from 'app/plugins/datasource/dashboard';
-import { DASHBOARD_DATASOURCE_PLUGIN_ID } from 'app/plugins/datasource/dashboard/types';
+import { SHARED_DASHBOARD_QUERY, DASHBOARD_DATASOURCE_PLUGIN_ID } from 'app/plugins/datasource/dashboard/constants';
 import { DashboardDataDTO } from 'app/types';
 
 import { DashboardDataLayerSet } from '../scene/DashboardDataLayerSet';
-import { DashboardGridItem } from '../scene/DashboardGridItem';
-import { LibraryVizPanel } from '../scene/LibraryVizPanel';
+import { LibraryPanelBehavior } from '../scene/LibraryPanelBehavior';
 import { PanelTimeRange } from '../scene/PanelTimeRange';
 import { RowRepeaterBehavior } from '../scene/RowRepeaterBehavior';
+import { DashboardGridItem } from '../scene/layout-default/DashboardGridItem';
+import { DefaultGridLayoutManager } from '../scene/layout-default/DefaultGridLayoutManager';
 import { NEW_LINK } from '../settings/links/utils';
 import { getQueryRunnerFor } from '../utils/utils';
 
@@ -44,7 +46,6 @@ import {
   buildGridItemForPanel,
   transformSaveModelToScene,
   convertOldSnapshotToScenesSnapshot,
-  buildGridItemForLibPanel,
 } from './transformSaveModelToScene';
 
 describe('transformSaveModelToScene', () => {
@@ -168,6 +169,35 @@ describe('transformSaveModelToScene', () => {
       const scene = createDashboardSceneFromDashboardModel(oldModel, dash);
       expect(scene.state.$variables?.state.variables).toBeDefined();
     });
+
+    it('should not return lazy loaded panels when user is image renderer', () => {
+      contextSrv.user.authenticatedBy = 'render';
+
+      const panel1 = createPanelSaveModel({
+        title: 'test1',
+        gridPos: { x: 0, y: 1, w: 12, h: 8 },
+      }) as Panel;
+
+      const panel2 = createPanelSaveModel({
+        title: 'test2',
+        gridPos: { x: 0, y: 10, w: 12, h: 8 },
+      }) as Panel;
+
+      const dashboard = {
+        ...defaultDashboard,
+        title: 'Test dashboard',
+        uid: 'test-uid',
+        panels: [panel1, panel2],
+      };
+
+      const oldModel = new DashboardModel(dashboard);
+
+      const scene = createDashboardSceneFromDashboardModel(oldModel, dashboard);
+      const layout = scene.state.body as DefaultGridLayoutManager;
+      const body = layout.state.grid;
+
+      expect(body.state.isLazy).toBeFalsy();
+    });
   });
 
   describe('When creating a new dashboard', () => {
@@ -287,6 +317,63 @@ describe('transformSaveModelToScene', () => {
   });
 
   describe('when organizing panels as scene children', () => {
+    it('should leave panels outside second row if it is collapsed', () => {
+      const panel1 = createPanelSaveModel({
+        title: 'test1',
+        gridPos: { x: 0, y: 1, w: 12, h: 8 },
+      }) as Panel;
+
+      const panel2 = createPanelSaveModel({
+        title: 'test2',
+        gridPos: { x: 0, y: 10, w: 12, h: 8 },
+      }) as Panel;
+
+      const row1 = createPanelSaveModel({
+        title: 'test row 1',
+        type: 'row',
+        gridPos: { x: 0, y: 0, w: 12, h: 1 },
+        collapsed: false,
+        panels: [],
+      }) as unknown as RowPanel;
+
+      const row2 = createPanelSaveModel({
+        title: 'test row 2',
+        type: 'row',
+        gridPos: { x: 0, y: 9, w: 12, h: 1 },
+        collapsed: true,
+        panels: [],
+      }) as unknown as RowPanel;
+
+      const dashboard = {
+        ...defaultDashboard,
+        title: 'Test dashboard',
+        uid: 'test-uid',
+        panels: [row1, panel1, row2, panel2],
+      };
+
+      const oldModel = new DashboardModel(dashboard);
+
+      const scene = createDashboardSceneFromDashboardModel(oldModel, dashboard);
+      const layout = scene.state.body as DefaultGridLayoutManager;
+      const body = layout.state.grid;
+
+      expect(body.state.children).toHaveLength(3);
+      const rowScene1 = body.state.children[0] as SceneGridRow;
+      expect(rowScene1).toBeInstanceOf(SceneGridRow);
+      expect(rowScene1.state.title).toEqual(row1.title);
+      expect(rowScene1.state.isCollapsed).toEqual(row1.collapsed);
+      expect(rowScene1.state.children).toHaveLength(1);
+      expect(rowScene1.state.children[0]).toBeInstanceOf(DashboardGridItem);
+
+      const rowScene2 = body.state.children[1] as SceneGridRow;
+      expect(rowScene2).toBeInstanceOf(SceneGridRow);
+      expect(rowScene2.state.title).toEqual(row2.title);
+      expect(rowScene2.state.isCollapsed).toEqual(row2.collapsed);
+      expect(rowScene2.state.children).toHaveLength(0);
+
+      expect(body.state.children[2]).toBeInstanceOf(DashboardGridItem);
+    });
+
     it('should create panels within collapsed rows', () => {
       const panel = createPanelSaveModel({
         title: 'test',
@@ -320,7 +407,8 @@ describe('transformSaveModelToScene', () => {
       const oldModel = new DashboardModel(dashboard);
 
       const scene = createDashboardSceneFromDashboardModel(oldModel, dashboard);
-      const body = scene.state.body as SceneGridLayout;
+      const layout = scene.state.body as DefaultGridLayoutManager;
+      const body = layout.state.grid;
 
       expect(body.state.children).toHaveLength(1);
       const rowScene = body.state.children[0] as SceneGridRow;
@@ -332,7 +420,9 @@ describe('transformSaveModelToScene', () => {
       expect(rowScene.state.children[0]).toBeInstanceOf(DashboardGridItem);
       expect(rowScene.state.children[1]).toBeInstanceOf(DashboardGridItem);
       // Panels are sorted by position in the row
-      expect((rowScene.state.children[0] as DashboardGridItem).state.body!).toBeInstanceOf(LibraryVizPanel);
+      expect((rowScene.state.children[0] as DashboardGridItem).state.body.state.$behaviors![0]).toBeInstanceOf(
+        LibraryPanelBehavior
+      );
       expect((rowScene.state.children[1] as DashboardGridItem).state.body!).toBeInstanceOf(VizPanel);
     });
 
@@ -414,7 +504,8 @@ describe('transformSaveModelToScene', () => {
       const oldModel = new DashboardModel(dashboard);
 
       const scene = createDashboardSceneFromDashboardModel(oldModel, dashboard);
-      const body = scene.state.body as SceneGridLayout;
+      const layout = scene.state.body as DefaultGridLayoutManager;
+      const body = layout.state.grid;
 
       expect(body.state.children).toHaveLength(4);
       expect(body).toBeInstanceOf(SceneGridLayout);
@@ -425,7 +516,7 @@ describe('transformSaveModelToScene', () => {
       // lib panel out of row
       expect(body.state.children[1]).toBeInstanceOf(DashboardGridItem);
       const panelOutOfRowLibVizPanel = body.state.children[1] as DashboardGridItem;
-      expect(panelOutOfRowLibVizPanel.state.body!).toBeInstanceOf(LibraryVizPanel);
+      expect(panelOutOfRowLibVizPanel.state.body.state.$behaviors![0]).toBeInstanceOf(LibraryPanelBehavior);
       // Row with panels
       expect(body.state.children[2]).toBeInstanceOf(SceneGridRow);
       const rowWithPanelsScene = body.state.children[2] as SceneGridRow;
@@ -433,7 +524,7 @@ describe('transformSaveModelToScene', () => {
       expect(rowWithPanelsScene.state.key).toBe('panel-10');
       expect(rowWithPanelsScene.state.children).toHaveLength(2);
       const libPanel = rowWithPanelsScene.state.children[1] as DashboardGridItem;
-      expect(libPanel.state.body!).toBeInstanceOf(LibraryVizPanel);
+      expect(libPanel.state.body.state.$behaviors![0]).toBeInstanceOf(LibraryPanelBehavior);
       // Panel within row
       expect(rowWithPanelsScene.state.children[0]).toBeInstanceOf(DashboardGridItem);
       const panelInRowVizPanel = rowWithPanelsScene.state.children[0] as DashboardGridItem;
@@ -524,6 +615,18 @@ describe('transformSaveModelToScene', () => {
       expect(vizPanel.state.hoverHeader).toEqual(true);
     });
 
+    it('should set hoverHeader to true if timeFrom and hideTimeOverride is true', () => {
+      const panel = {
+        type: 'test-plugin',
+        timeFrom: '2h',
+        hideTimeOverride: true,
+      };
+
+      const { vizPanel } = buildGridItemForTest(panel);
+
+      expect(vizPanel.state.hoverHeader).toBe(true);
+    });
+
     it('should initalize the VizPanel with min interval set', () => {
       const panel = {
         title: '',
@@ -585,6 +688,26 @@ describe('transformSaveModelToScene', () => {
       const { vizPanel } = buildGridItemForTest(panel);
 
       expect(vizPanel.state.$data).toBeUndefined();
+    });
+
+    it('When repeat is set but repeatDirection is not it should default to horizontal repeat', () => {
+      const panel = {
+        title: '',
+        type: 'text-plugin-34',
+        gridPos: { x: 0, y: 0, w: 8, h: 8 },
+        repeat: 'server',
+        maxPerRow: 8,
+      };
+
+      const gridItem = buildGridItemForPanel(new PanelModel(panel));
+      const repeater = gridItem as DashboardGridItem;
+
+      expect(repeater.state.maxPerRow).toBe(8);
+      expect(repeater.state.variableName).toBe('server');
+      expect(repeater.state.width).toBe(24);
+      expect(repeater.state.height).toBe(8);
+      expect(repeater.state.repeatDirection).toBe('h');
+      expect(repeater.state.maxPerRow).toBe(8);
     });
 
     it('When repeat is set should build PanelRepeaterGridItem', () => {
@@ -665,7 +788,7 @@ describe('transformSaveModelToScene', () => {
       expect(runner.state.queryCachingTTL).toBe(200000);
     });
 
-    it('should convert saved lib panel to LibraryVizPanel', () => {
+    it('should convert saved lib panel to a viz panel with LibraryPanelBehavior', () => {
       const panel = {
         title: 'Panel',
         gridPos: { x: 0, y: 0, w: 12, h: 8 },
@@ -677,19 +800,25 @@ describe('transformSaveModelToScene', () => {
         },
       };
 
-      const gridItem = buildGridItemForLibPanel(new PanelModel(panel))!;
-      const libVizPanel = gridItem.state.body as LibraryVizPanel;
+      const gridItem = buildGridItemForPanel(new PanelModel(panel))!;
+      const libPanelBehavior = gridItem.state.body.state.$behaviors![0];
 
-      expect(libVizPanel.state.uid).toEqual(panel.libraryPanel.uid);
-      expect(libVizPanel.state.name).toEqual(panel.libraryPanel.name);
-      expect(libVizPanel.state.title).toEqual(panel.title);
+      expect(libPanelBehavior).toBeInstanceOf(LibraryPanelBehavior);
+      expect((libPanelBehavior as LibraryPanelBehavior).state.uid).toEqual(panel.libraryPanel.uid);
+      expect((libPanelBehavior as LibraryPanelBehavior).state.name).toEqual(panel.libraryPanel.name);
+      expect(gridItem.state.body.state.title).toEqual(panel.title);
     });
   });
 
   describe('Repeating rows', () => {
     it('Should build correct scene model', () => {
-      const scene = transformSaveModelToScene({ dashboard: repeatingRowsAndPanelsDashboardJson as any, meta: {} });
-      const body = scene.state.body as SceneGridLayout;
+      const scene = transformSaveModelToScene({
+        dashboard: repeatingRowsAndPanelsDashboardJson as DashboardDataDTO,
+        meta: {},
+      });
+
+      const layout = scene.state.body as DefaultGridLayoutManager;
+      const body = layout.state.grid;
       const row2 = body.state.children[1] as SceneGridRow;
 
       expect(row2.state.$behaviors?.[0]).toBeInstanceOf(RowRepeaterBehavior);
@@ -704,7 +833,7 @@ describe('transformSaveModelToScene', () => {
 
   describe('Annotation queries', () => {
     it('Should build correct scene model', () => {
-      const scene = transformSaveModelToScene({ dashboard: dashboard_to_load1 as any, meta: {} });
+      const scene = transformSaveModelToScene({ dashboard: dashboard_to_load1 as DashboardDataDTO, meta: {} });
 
       expect(scene.state.$data).toBeInstanceOf(DashboardDataLayerSet);
       expect(scene.state.controls!.state.variableControls[1]).toBeInstanceOf(SceneDataLayerControls);
@@ -732,7 +861,7 @@ describe('transformSaveModelToScene', () => {
   describe('Alerting data layer', () => {
     it('Should add alert states data layer if unified alerting enabled', () => {
       config.unifiedAlertingEnabled = true;
-      const scene = transformSaveModelToScene({ dashboard: dashboard_to_load1 as any, meta: {} });
+      const scene = transformSaveModelToScene({ dashboard: dashboard_to_load1 as DashboardDataDTO, meta: {} });
 
       expect(scene.state.$data).toBeInstanceOf(DashboardDataLayerSet);
       expect(scene.state.controls!.state.variableControls[1]).toBeInstanceOf(SceneDataLayerControls);
@@ -745,7 +874,7 @@ describe('transformSaveModelToScene', () => {
       config.unifiedAlertingEnabled = false;
       const dashboard = { ...dashboard_to_load1 } as unknown as DashboardDataDTO;
       dashboard.panels![0].alert = {};
-      const scene = transformSaveModelToScene({ dashboard: dashboard_to_load1 as any, meta: {} });
+      const scene = transformSaveModelToScene({ dashboard: dashboard_to_load1 as DashboardDataDTO, meta: {} });
 
       expect(scene.state.$data).toBeInstanceOf(DashboardDataLayerSet);
       expect(scene.state.controls!.state.variableControls[1]).toBeInstanceOf(SceneDataLayerControls);

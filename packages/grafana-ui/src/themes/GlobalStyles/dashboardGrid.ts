@@ -20,6 +20,9 @@ export function getDashboardGridStyles(theme: GrafanaTheme2) {
     },
 
     [theme.breakpoints.down('md')]: {
+      '.react-grid-layout': {
+        height: 'unset !important',
+      },
       '.react-grid-item': {
         display: 'block !important',
         transitionProperty: 'none !important',
@@ -63,6 +66,12 @@ export function getDashboardGridStyles(theme: GrafanaTheme2) {
           transitionProperty: 'transform !important',
         },
       },
+    },
+
+    '.dashboard-selected-element': {
+      outline: `2px dashed ${theme.colors.primary.border}`,
+      outlineOffset: '0px',
+      borderRadius: '2px',
     },
   });
 }

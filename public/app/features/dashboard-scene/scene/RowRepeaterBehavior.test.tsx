@@ -1,3 +1,4 @@
+import { VariableRefresh } from '@grafana/data';
 import { getPanelPlugin } from '@grafana/data/test/__mocks__/pluginMocks';
 import { setPluginImportUtils } from '@grafana/runtime';
 import {
@@ -9,17 +10,16 @@ import {
   SceneVariableSet,
   TestVariable,
   VariableValueOption,
-  VizPanel,
-  VizPanelMenu,
 } from '@grafana/scenes';
 import { ALL_VARIABLE_TEXT, ALL_VARIABLE_VALUE } from 'app/features/variables/constants';
 
 import { activateFullSceneTree } from '../utils/test-utils';
+import { isReadOnlyClone } from '../utils/utils';
 
-import { DashboardGridItem, RepeatDirection } from './DashboardGridItem';
 import { DashboardScene } from './DashboardScene';
-import { panelMenuBehavior, repeatPanelMenuBehavior } from './PanelMenuBehavior';
 import { RowRepeaterBehavior } from './RowRepeaterBehavior';
+import { RepeatDirection } from './layout-default/DashboardGridItem';
+import { DefaultGridLayoutManager } from './layout-default/DefaultGridLayoutManager';
 import { RowActions } from './row-actions/RowActions';
 
 jest.mock('@grafana/runtime', () => ({
@@ -67,6 +67,49 @@ describe('RowRepeaterBehavior', () => {
       expect(gridItem.state.body?.state.key).toBe('canvas-1-clone-B1');
     });
 
+    it('Repeated rows should be read only', () => {
+      const row1 = grid.state.children[1] as SceneGridRow;
+      const row2 = grid.state.children[2] as SceneGridRow;
+      expect(isReadOnlyClone(row1)).toBe(false);
+      expect(isReadOnlyClone(row2)).toBe(true);
+    });
+
+    it('Should update all rows when a panel is added to a clone', async () => {
+      const originalRow = grid.state.children[1] as SceneGridRow;
+      const clone1 = grid.state.children[2] as SceneGridRow;
+      const clone2 = grid.state.children[3] as SceneGridRow;
+
+      expect(originalRow.state.children.length).toBe(1);
+      expect(clone1.state.children.length).toBe(1);
+      expect(clone2.state.children.length).toBe(1);
+
+      clone1.setState({
+        children: [
+          ...clone1.state.children,
+          new SceneGridItem({
+            x: 0,
+            y: 16,
+            width: 24,
+            height: 5,
+            key: 'griditem-4',
+            body: new SceneCanvasText({
+              text: 'new panel',
+            }),
+          }),
+        ],
+      });
+
+      grid.forceRender();
+
+      // repeater has run so there are new clone row objects
+      const newClone1 = grid.state.children[2] as SceneGridRow;
+      const newClone2 = grid.state.children[3] as SceneGridRow;
+
+      expect(originalRow.state.children.length).toBe(2);
+      expect(newClone1.state.children.length).toBe(2);
+      expect(newClone2.state.children.length).toBe(2);
+    });
+
     it('Should push row at the bottom down', () => {
       // Should push row at the bottom down
       const rowAtTheBottom = grid.state.children[6] as SceneGridRow;
@@ -108,67 +151,25 @@ describe('RowRepeaterBehavior', () => {
 
       expect(gridStateUpdates.length).toBe(1);
     });
-  });
 
-  describe('Should not repeat row', () => {
-    it('Should ignore repeat process if the variable is not a multi select variable', async () => {
-      const { scene, grid, repeatBehavior } = buildScene({ variableQueryTime: 0 }, undefined, { isMulti: false });
-      const gridStateUpdates = [];
-      grid.subscribeToState((state) => gridStateUpdates.push(state));
-
-      activateFullSceneTree(scene);
-      await new Promise((r) => setTimeout(r, 1));
-
-      // trigger another repeat cycle by changing the variable
-      repeatBehavior.performRepeat();
-
-      await new Promise((r) => setTimeout(r, 1));
-
-      expect(gridStateUpdates.length).toBe(0);
-    });
-  });
-
-  describe('Given scene with DashboardGridItem', () => {
-    let scene: DashboardScene;
-    let grid: SceneGridLayout;
-    let rowToRepeat: SceneGridRow;
-
-    beforeEach(async () => {
-      const menu = new VizPanelMenu({
-        $behaviors: [panelMenuBehavior],
+    it('Should update panels on refresh if variables load on time range change', async () => {
+      const { scene, repeatBehavior } = buildScene({
+        variableQueryTime: 0,
+        variableRefresh: VariableRefresh.onTimeRangeChanged,
       });
 
-      ({ scene, grid, rowToRepeat } = buildScene({ variableQueryTime: 0 }));
-      const panel = new VizPanel({ pluginId: 'text', menu });
-      panel.getPlugin = () => getPanelPlugin({ skipDataQuery: false });
-
-      rowToRepeat.setState({
-        children: [
-          new DashboardGridItem({
-            body: panel,
-          }),
-        ],
-      });
+      const notifyPanelsSpy = jest.spyOn(repeatBehavior, 'notifyRepeatedPanelsWaitingForVariables');
 
       activateFullSceneTree(scene);
-      await new Promise((r) => setTimeout(r, 1));
-    });
 
-    it('Should set repeat specific panel menu for repeated rows but not original one', () => {
-      const row1 = grid.state.children[1] as SceneGridRow;
-      const row2 = grid.state.children[2] as SceneGridRow;
-      const panelMenuBehaviorOriginal = (
-        ((row1.state.children[0] as DashboardGridItem).state.body as VizPanel).state.menu as VizPanelMenu
-      ).state.$behaviors;
-      const panelMenuBehaviorClone = (
-        ((row2.state.children[0] as DashboardGridItem).state.body as VizPanel).state.menu as VizPanelMenu
-      ).state.$behaviors;
+      expect(notifyPanelsSpy).toHaveBeenCalledTimes(0);
 
-      expect(panelMenuBehaviorOriginal).toBeDefined();
-      expect(panelMenuBehaviorOriginal![0]).toBe(panelMenuBehavior);
+      scene.state.$timeRange?.onRefresh();
 
-      expect(panelMenuBehaviorClone).toBeDefined();
-      expect(panelMenuBehaviorClone![0]).toBe(repeatPanelMenuBehavior);
+      //make sure notifier is called
+      expect(notifyPanelsSpy).toHaveBeenCalledTimes(1);
+
+      notifyPanelsSpy.mockRestore();
     });
   });
 
@@ -215,6 +216,7 @@ interface SceneOptions {
   maxPerRow?: number;
   itemHeight?: number;
   repeatDirection?: RepeatDirection;
+  variableRefresh?: VariableRefresh;
 }
 
 function buildScene(
@@ -298,6 +300,7 @@ function buildScene(
           isMulti: true,
           includeAll: true,
           delayMs: options.variableQueryTime,
+          refresh: options.variableRefresh,
           optionsToReturn: variableOptions ?? [
             { label: 'A', value: 'A1' },
             { label: 'B', value: 'B1' },
@@ -309,7 +312,7 @@ function buildScene(
         }),
       ],
     }),
-    body: grid,
+    body: new DefaultGridLayoutManager({ grid }),
   });
 
   const rowToRepeat = repeatBehavior.parent as SceneGridRow;

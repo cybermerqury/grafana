@@ -98,8 +98,13 @@ func deny(c *contextmodel.ReqContext, evaluator Evaluator, err error) {
 
 	if !c.IsApiRequest() {
 		// TODO(emil): I'd like to show a message after this redirect, not sure how that can be done?
-		writeRedirectCookie(c)
-		c.Redirect(setting.AppSubUrl + "/")
+		if !c.UseSessionStorageRedirect {
+			writeRedirectCookie(c)
+			c.Redirect(setting.AppSubUrl + "/")
+			return
+		}
+
+		c.Redirect(setting.AppSubUrl + "/" + getRedirectToQueryParam(c))
 		return
 	}
 
@@ -125,13 +130,25 @@ func unauthorized(c *contextmodel.ReqContext) {
 		return
 	}
 
-	writeRedirectCookie(c)
+	if !c.UseSessionStorageRedirect {
+		writeRedirectCookie(c)
+	}
+
 	if errors.Is(c.LookupTokenErr, authn.ErrTokenNeedsRotation) {
-		c.Redirect(setting.AppSubUrl + "/user/auth-tokens/rotate")
+		if !c.UseSessionStorageRedirect {
+			c.Redirect(setting.AppSubUrl + "/user/auth-tokens/rotate")
+			return
+		}
+		c.Redirect(setting.AppSubUrl + "/user/auth-tokens/rotate" + getRedirectToQueryParam(c))
 		return
 	}
 
-	c.Redirect(setting.AppSubUrl + "/login")
+	if !c.UseSessionStorageRedirect {
+		c.Redirect(setting.AppSubUrl + "/login")
+		return
+	}
+
+	c.Redirect(setting.AppSubUrl + "/login" + getRedirectToQueryParam(c))
 }
 
 func tokenRevoked(c *contextmodel.ReqContext, err *usertoken.TokenRevokedError) {
@@ -146,8 +163,13 @@ func tokenRevoked(c *contextmodel.ReqContext, err *usertoken.TokenRevokedError) 
 		return
 	}
 
-	writeRedirectCookie(c)
-	c.Redirect(setting.AppSubUrl + "/login")
+	if !c.UseSessionStorageRedirect {
+		writeRedirectCookie(c)
+		c.Redirect(setting.AppSubUrl + "/login")
+		return
+	}
+
+	c.Redirect(setting.AppSubUrl + "/login" + getRedirectToQueryParam(c))
 }
 
 func writeRedirectCookie(c *contextmodel.ReqContext) {
@@ -160,6 +182,21 @@ func writeRedirectCookie(c *contextmodel.ReqContext) {
 	redirectTo = removeForceLoginParams(redirectTo)
 
 	cookies.WriteCookie(c.Resp, "redirect_to", url.QueryEscape(redirectTo), 0, nil)
+}
+
+func getRedirectToQueryParam(c *contextmodel.ReqContext) string {
+	redirectTo := c.Req.RequestURI
+	if setting.AppSubUrl != "" && strings.HasPrefix(redirectTo, setting.AppSubUrl) {
+		redirectTo = strings.TrimPrefix(redirectTo, setting.AppSubUrl)
+	}
+
+	if redirectTo == "/" {
+		return ""
+	}
+
+	// remove any forceLogin=true params
+	redirectTo = removeForceLoginParams(redirectTo)
+	return "?redirectTo=" + url.QueryEscape(redirectTo)
 }
 
 var forceLoginParamsRegexp = regexp.MustCompile(`&?forceLogin=true`)
@@ -205,6 +242,10 @@ func AuthorizeInOrgMiddleware(ac AccessControl, authnService authn.Service) func
 			var orgUser identity.Requester = c.SignedInUser
 			if targetOrgID != c.SignedInUser.GetOrgID() {
 				orgUser, err = authnService.ResolveIdentity(c.Req.Context(), targetOrgID, c.SignedInUser.GetID())
+				if err == nil && orgUser.GetOrgID() == NoOrgID {
+					// User is not a member of the target org, so only their global permissions are relevant
+					orgUser, err = authnService.ResolveIdentity(c.Req.Context(), GlobalOrgID, c.SignedInUser.GetID())
+				}
 				if err != nil {
 					deny(c, nil, fmt.Errorf("failed to authenticate user in target org: %w", err))
 					return

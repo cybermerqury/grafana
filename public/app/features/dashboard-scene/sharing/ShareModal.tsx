@@ -6,11 +6,11 @@ import { Modal, ModalTabsHeader, TabContent } from '@grafana/ui';
 import { contextSrv } from 'app/core/core';
 import { t } from 'app/core/internationalization';
 import { isPublicDashboardsEnabled } from 'app/features/dashboard/components/ShareModal/SharePublicDashboard/SharePublicDashboardUtils';
+import { AccessControlAction } from 'app/types';
 
 import { getTrackingSource } from '../../dashboard/components/ShareModal/utils';
-import { LibraryVizPanel } from '../scene/LibraryVizPanel';
 import { DashboardInteractions } from '../utils/interactions';
-import { getDashboardSceneFor } from '../utils/utils';
+import { getDashboardSceneFor, isLibraryPanel } from '../utils/utils';
 
 import { ShareExportTab } from './ShareExportTab';
 import { ShareLibraryPanelTab } from './ShareLibraryPanelTab';
@@ -59,16 +59,19 @@ export class ShareModal extends SceneObjectBase<ShareModalState> implements Moda
       tabs.push(new ShareExportTab({ modalRef }));
     }
 
-    if (contextSrv.isSignedIn && config.snapshotEnabled && dashboard.canEditDashboard()) {
+    if (
+      contextSrv.isSignedIn &&
+      config.snapshotEnabled &&
+      contextSrv.hasPermission(AccessControlAction.SnapshotsCreate)
+    ) {
       tabs.push(new ShareSnapshotTab({ panelRef, dashboardRef: dashboard.getRef(), modalRef }));
     }
 
     if (panelRef) {
       tabs.push(new SharePanelEmbedTab({ panelRef }));
       const panel = panelRef.resolve();
-      const isLibraryPanel = panel.parent instanceof LibraryVizPanel;
       if (panel instanceof VizPanel) {
-        if (!isLibraryPanel) {
+        if (!isLibraryPanel(panel)) {
           tabs.push(new ShareLibraryPanelTab({ panelRef, modalRef }));
         }
       }
@@ -88,7 +91,12 @@ export class ShareModal extends SceneObjectBase<ShareModalState> implements Moda
   }
 
   onDismiss = () => {
-    locationService.partial({ shareView: null });
+    if (this.state.panelRef) {
+      const dashboard = getDashboardSceneFor(this);
+      dashboard.closeModal();
+    } else {
+      locationService.partial({ shareView: null });
+    }
   };
 
   onChangeTab: ComponentProps<typeof ModalTabsHeader>['onChangeTab'] = (tab) => {

@@ -12,7 +12,7 @@ import {
   SessionDashboard,
   SessionUser,
 } from 'app/features/dashboard/components/ShareModal/SharePublicDashboard/SharePublicDashboardUtils';
-import { DashboardModel } from 'app/features/dashboard/state';
+import { DashboardModel } from 'app/features/dashboard/state/DashboardModel';
 import { DashboardScene } from 'app/features/dashboard-scene/scene/DashboardScene';
 import {
   PublicDashboardListWithPagination,
@@ -209,7 +209,7 @@ export const publicDashboardApi = createApi({
                 )
               : t(
                   'public-dashboard.email-sharing.success-share-type-change',
-                  'Dashboard access restricted: Only specific people can now access with the link'
+                  'Dashboard access updated: Only specific people can now access with the link'
                 );
         }
         dispatch(notifyApp(createSuccessNotification(message)));

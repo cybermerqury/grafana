@@ -26,6 +26,14 @@ func extractPluginSettings(sections []*ini.Section) PluginSettings {
 	return psMap
 }
 
+var (
+	defaultPreinstallPlugins = map[string]InstallPlugin{
+		// Default preinstalled plugins
+		"grafana-lokiexplore-app": {"grafana-lokiexplore-app", "", ""},
+		"grafana-pyroscope-app":   {"grafana-pyroscope-app", "", ""},
+	}
+)
+
 func (cfg *Cfg) readPluginSettings(iniFile *ini.File) error {
 	pluginsSection := iniFile.Section("plugins")
 
@@ -39,19 +47,37 @@ func (cfg *Cfg) readPluginSettings(iniFile *ini.File) error {
 	cfg.DisablePlugins = util.SplitString(pluginsSection.Key("disable_plugins").MustString(""))
 	cfg.HideAngularDeprecation = util.SplitString(pluginsSection.Key("hide_angular_deprecation").MustString(""))
 	cfg.ForwardHostEnvVars = util.SplitString(pluginsSection.Key("forward_host_env_vars").MustString(""))
-	disablePreinstall := pluginsSection.Key("disable_preinstall").MustBool(false)
+	disablePreinstall := pluginsSection.Key("preinstall_disabled").MustBool(false)
 	if !disablePreinstall {
 		rawInstallPlugins := util.SplitString(pluginsSection.Key("preinstall").MustString(""))
-		cfg.InstallPlugins = make([]InstallPlugin, len(rawInstallPlugins))
-		for i, plugin := range rawInstallPlugins {
+		preinstallPlugins := make(map[string]InstallPlugin)
+		// Add the default preinstalled plugins
+		for _, plugin := range defaultPreinstallPlugins {
+			preinstallPlugins[plugin.ID] = plugin
+		}
+		// Add the plugins defined in the configuration
+		for _, plugin := range rawInstallPlugins {
 			parts := strings.Split(plugin, "@")
 			id := parts[0]
-			v := ""
-			if len(parts) == 2 {
-				v = parts[1]
+			version := ""
+			url := ""
+			if len(parts) > 1 {
+				version = parts[1]
+				if len(parts) > 2 {
+					url = parts[2]
+				}
 			}
-			cfg.InstallPlugins[i] = InstallPlugin{id, v}
+
+			preinstallPlugins[id] = InstallPlugin{id, version, url}
 		}
+		// Remove from the list the plugins that have been disabled
+		for _, disabledPlugin := range cfg.DisablePlugins {
+			delete(preinstallPlugins, disabledPlugin)
+		}
+		for _, plugin := range preinstallPlugins {
+			cfg.PreinstallPlugins = append(cfg.PreinstallPlugins, plugin)
+		}
+		cfg.PreinstallPluginsAsync = pluginsSection.Key("preinstall_async").MustBool(true)
 	}
 
 	cfg.PluginCatalogURL = pluginsSection.Key("plugin_catalog_url").MustString("https://grafana.com/grafana/plugins/")
@@ -65,9 +91,6 @@ func (cfg *Cfg) readPluginSettings(iniFile *ini.File) error {
 	// Plugins CDN settings
 	cfg.PluginsCDNURLTemplate = strings.TrimRight(pluginsSection.Key("cdn_base_url").MustString(""), "/")
 	cfg.PluginLogBackendRequests = pluginsSection.Key("log_backend_requests").MustBool(false)
-
-	// Installation token for managed plugins
-	cfg.PluginInstallToken = pluginsSection.Key("install_token").MustString("")
 
 	return nil
 }

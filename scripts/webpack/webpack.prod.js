@@ -48,7 +48,7 @@ module.exports = (env = {}) =>
         },
         require('./sass.rule.js')({
           sourceMap: false,
-          preserveUrl: false,
+          preserveUrl: true,
         }),
       ],
     },

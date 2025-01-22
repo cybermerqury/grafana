@@ -1,13 +1,24 @@
 import { DataQuery } from '@grafana/schema';
 
-import { DataQueryPartialSpec } from './api/types';
+export type DataQueryTarget = {
+  variables: object; // TODO: Detect variables in #86838
+  properties: DataQuery;
+};
+
+export type DataQuerySpec = {
+  title: string;
+  vars: object[]; // TODO: Detect variables in #86838
+  targets: DataQueryTarget[];
+};
+
+export type DataQueryPartialSpec = Partial<DataQuerySpec>;
 
 export type QueryTemplate = {
   uid: string;
   title: string;
   targets: DataQuery[];
   createdAtTimestamp: number;
-  user?: string;
+  user?: User;
 };
 
 export type AddQueryTemplateCommand = {
@@ -22,4 +33,10 @@ export type EditQueryTemplateCommand = {
 
 export type DeleteQueryTemplateCommand = {
   uid: string;
+};
+
+export type User = {
+  uid: string;
+  displayName?: string;
+  avatarUrl?: string;
 };
