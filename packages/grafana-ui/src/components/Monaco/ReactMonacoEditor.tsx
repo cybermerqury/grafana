@@ -29,7 +29,7 @@ export const ReactMonacoEditor = (props: ReactMonacoEditorProps) => {
         ...options,
         fontFamily: theme.typography.code.fontFamily,
       }}
-      theme={theme.isDark ? 'grafana-dark' : 'grafana-light'}
+      theme={theme.isLight ? 'grafana-light' : 'grafana-dark'}
       beforeMount={onMonacoBeforeMount}
       onMount={(editor, monaco) => {
         // we use a custom font in our monaco editor

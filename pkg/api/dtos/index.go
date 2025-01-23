@@ -41,8 +41,8 @@ type EntryPointAssets struct {
 	JSFiles            []EntryPointAsset `json:"jsFiles"`
 	CSSFiles           []EntryPointAsset `json:"cssFiles"`
 	Dark               string            `json:"dark"`
-	Merqury              string            `json:"merqury"`
 	Light              string            `json:"light"`
+	Merqury            string            `json:"merqury"`
 	Swagger            []EntryPointAsset `json:"swagger"`
 	SwaggerCSSFiles    []EntryPointAsset `json:"swaggerCssFiles"`
 }

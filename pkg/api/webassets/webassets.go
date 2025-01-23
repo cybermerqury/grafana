@@ -142,6 +142,7 @@ func readWebAssets(r io.Reader) (*dtos.EntryPointAssets, error) {
 		CSSFiles:        make([]dtos.EntryPointAsset, 0, len(entryPoints.App.Assets.CSS)),
 		Dark:            entryPoints.Dark.Assets.CSS[0],
 		Light:           entryPoints.Light.Assets.CSS[0],
+		Merqury:         entryPoints.Merqury.Assets.CSS[0],
 		Swagger:         make([]dtos.EntryPointAsset, 0, len(entryPoints.Swagger.Assets.JS)),
 		SwaggerCSSFiles: make([]dtos.EntryPointAsset, 0, len(entryPoints.Swagger.Assets.CSS)),
 	}
